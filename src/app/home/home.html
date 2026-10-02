@@ -1,0 +1,85 @@
+<div class="home">
+  <header>
+    <a href="./" aria-label="Poll App home"
+      ><img class="logo" src="assets/pollapplogo=Orange.svg" alt="Poll App"
+    /></a>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <h1 id="hero-title">Collect Feedback,<br />Unlock Ideas</h1>
+        <p>
+          Create and share surveys in minutes – from team events to workplace culture. Collect
+          opinions, engage your audience, and turn feedback into action.
+        </p>
+        <button
+          class="new-survey"
+          type="button"
+          disabled
+          title="Survey creation will be added next"
+        >
+          New survey
+        </button>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <img class="symbol check" src="assets/checkmark.svg" alt="" />
+        <img class="survey-image" src="assets/position%2003%402x%201.svg" alt="" />
+        <img class="symbol bubble" src="assets/sprechblase.svg" alt="" />
+        <img class="symbol question" src="assets/questionmark.svg" alt="" />
+        <img class="symbol star" src="assets/star.svg" alt="" />
+      </div>
+    </section>
+    <section class="surveys" aria-labelledby="surveys-title">
+      <h2 id="surveys-title">Your surveys</h2>
+      <h3>Ending soon surveys</h3>
+      <div class="highlights">
+        @for (survey of highlights; track survey.id) {
+          <article class="highlight-card">
+            <p class="category">{{ survey.category }}</p>
+            <h4>@if (survey.category === 'Team activities') { <a [routerLink]="['/surveys', survey.id]">{{ survey.title }}</a> } @else { {{ survey.title }} }</h4>
+            <span class="deadline">{{ deadline(survey.daysLeft) }}</span>
+          </article>
+        }
+      </div>
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filter surveys by status">
+          <button
+            type="button"
+            [class.active]="selectedStatus() === 'active'"
+            [attr.aria-pressed]="selectedStatus() === 'active'"
+            (click)="selectedStatus.set('active')"
+          >
+            Active survey
+          </button>
+          <button
+            type="button"
+            [class.active]="selectedStatus() === 'past'"
+            [attr.aria-pressed]="selectedStatus() === 'past'"
+            (click)="selectedStatus.set('past')"
+          >
+            Past survey
+          </button>
+        </div>
+        <button
+          class="sort"
+          type="button"
+          [attr.aria-pressed]="sortByCategory()"
+          (click)="sortByCategory.set(!sortByCategory())"
+        >
+          Sort by categories <span aria-hidden="true">{{ sortByCategory() ? '▴' : '▾' }}</span>
+        </button>
+      </div>
+      <div class="survey-list" tabindex="0" aria-label="Surveys" aria-live="polite">
+        @for (survey of visibleSurveys(); track survey.id) {
+          <article class="survey-card">
+            <p class="category">{{ survey.category }}</p>
+            <h4>@if (survey.category === 'Team activities') { <a [routerLink]="['/surveys', survey.id]">{{ survey.title }}</a> } @else { {{ survey.title }} }</h4>
+            <span class="deadline">{{ deadline(survey.daysLeft) }}</span>
+          </article>
+        } @empty {
+          <p class="empty-state">No past surveys yet.</p>
+        }
+      </div>
+    </section>
+  </main>
+</div>

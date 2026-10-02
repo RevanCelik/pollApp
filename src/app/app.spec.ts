@@ -1,24 +1,56 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { Home } from './home/home';
 
 describe('App', () => {
-  beforeEach(async () => {
+  it('should create the app', async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-    })
-      .compileComponents();
+      providers: [provideRouter([])],
+    }).compileComponents();
+    expect(TestBed.createComponent(App).componentInstance).toBeTruthy();
+  });
+});
+
+describe('Home', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [Home], providers: [provideRouter([])] }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
+  it('renders the home screen and its survey cards', async () => {
+    const fixture = TestBed.createComponent(Home);
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, pollApp');
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('h1')?.textContent).toContain('Collect Feedback');
+    expect(page.querySelectorAll('.highlight-card').length).toBe(3);
+    expect(page.querySelectorAll('.survey-card').length).toBe(6);
+  });
+
+  it('switches to past surveys and back to active surveys', async () => {
+    const fixture = TestBed.createComponent(Home);
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    const filters = page.querySelectorAll<HTMLButtonElement>('.filters button');
+    filters[1].click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('.survey-card').length).toBe(0);
+    expect(page.querySelector('.empty-state')?.textContent).toContain('No past surveys');
+    filters[0].click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('.survey-card').length).toBe(6);
+  });
+
+  it('sorts categories and restores the original order', async () => {
+    const fixture = TestBed.createComponent(Home);
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    const sort = page.querySelector<HTMLButtonElement>('.sort')!;
+    sort.click();
+    await fixture.whenStable();
+    expect(page.querySelector('.survey-card .category')?.textContent).toBe('Gaming');
+    sort.click();
+    await fixture.whenStable();
+    expect(page.querySelector('.survey-card .category')?.textContent).toBe('Team activities');
   });
 });
