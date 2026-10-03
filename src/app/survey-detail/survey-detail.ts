@@ -1,57 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-
-interface Question {
-  title: string;
-  multiple: boolean;
-  answers: string[];
-  votes: number[];
-}
-
-// Counts are demo data, not live database results.
-const QUESTIONS: Question[] = [
-  {
-    title: 'Which date would work best for you?',
-    multiple: true,
-    answers: [
-      '19.09.2025, Friday',
-      '10.10.2025, Friday',
-      '11.10.2025, Saturday',
-      '31.10.2025, Friday',
-    ],
-    votes: [27, 44, 3, 26],
-  },
-  {
-    title: 'Choose the activities you prefer',
-    multiple: true,
-    answers: [
-      'Outdoor adventure like kayaking',
-      'Office Costume Party',
-      'Bowling, mini-golf, volleyball',
-      'Beach party, Music & cocktails',
-      'Escape room',
-    ],
-    votes: [60, 0, 14, 26, 0],
-  },
-  {
-    title: 'What’s most important to you in a team event?',
-    multiple: true,
-    answers: [
-      'Team bonding',
-      'Food and drinks',
-      'Trying something new',
-      'Keeping it low-key and stress-free',
-    ],
-    votes: [44, 3, 26, 27],
-  },
-  {
-    title: 'How long would you prefer the event to last?',
-    multiple: false,
-    answers: ['Half a day', 'Full day', 'Evening only'],
-    votes: [14, 86, 0],
-  },
-];
+import { SurveyStore } from '../services/survey-store';
 
 @Component({
   selector: 'app-survey-detail',
@@ -60,14 +10,18 @@ const QUESTIONS: Question[] = [
   styleUrl: './survey-detail.scss',
 })
 export class SurveyDetail {
+  private readonly store = inject(SurveyStore);
+  protected readonly createdSurvey = computed(() => this.store.surveys().find(s => s.id === this.surveyId()));
   private readonly route = inject(ActivatedRoute);
   private readonly params = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
   });
   protected readonly surveyId = computed(() => this.params().get('id'));
-  protected readonly found = computed(() => ['1', '6'].includes(this.surveyId() ?? ''));
-  protected readonly questions = QUESTIONS;
-  protected readonly choices = signal<number[][]>(QUESTIONS.map(() => []));
+  protected readonly loading = this.store.loading;
+  protected readonly error = this.store.error;
+  protected readonly found = computed(() => !!this.createdSurvey());
+  protected readonly questions = computed(() => this.createdSurvey()?.questions ?? []);
+  protected readonly choices = signal<number[][]>([]);
   protected readonly counts = signal<number[][]>([]);
   protected readonly submitted = signal(false);
   protected readonly showValidation = signal(false);
@@ -82,16 +36,18 @@ export class SurveyDetail {
   );
 
   constructor() {
+    void this.store.load();
     effect(() => {
-      const seeded = this.surveyId() === '1';
       this.counts.set(
-        QUESTIONS.map((question) => question.votes.map((count) => (seeded ? count : 0))),
+        this.questions().map((question) => question.votes.map(() => 0)),
       );
-      this.choices.set(QUESTIONS.map(() => []));
+      this.choices.set(this.questions().map(() => []));
       this.submitted.set(false);
       this.showValidation.set(false);
     });
   }
+
+  protected reload(): void { void this.store.load(); }
 
   protected letter(index: number): string {
     return String.fromCharCode(65 + index);
@@ -102,7 +58,7 @@ export class SurveyDetail {
     this.choices.update((rows) =>
       rows.map((row, index) => {
         if (index !== questionIndex) return row;
-        if (!QUESTIONS[index].multiple) return [answerIndex];
+        if (!this.questions()[index].multiple) return [answerIndex];
         return row.includes(answerIndex)
           ? row.filter((answer) => answer !== answerIndex)
           : [...row, answerIndex];

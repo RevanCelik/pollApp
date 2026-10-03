@@ -3,7 +3,7 @@
     <a routerLink="/" aria-label="Poll App home"
       ><img src="assets/pollapplogo=Purple%20dark.svg" alt="Poll App"
     /></a>
-    <button class="peach-button" type="button" disabled title="Survey creation will be added next">
+    <button class="peach-button" type="button" routerLink="/surveys/new">
       Create survey
     </button>
   </header>
@@ -13,18 +13,15 @@
         <div class="metadata">
           <div>
             <span class="status">Published</span>
-            <p>Ends on 01.09.2025</p>
+            <p>{{ createdSurvey()?.endDate ? 'Ends on ' + createdSurvey()?.endDate : 'No end date' }}</p>
           </div>
-          <p>Category: Team activities</p>
+          <p>Category: {{ createdSurvey()?.category }}</p>
         </div>
-        <h1 id="survey-title">Let’s Plan the Next Team Event Together</h1>
-        <p class="description">
-          We want to create team activities that everyone will enjoy – share your preferences and
-          ideas in our survey to help us plan better experiences together.
-        </p>
+        <h1 id="survey-title">{{ createdSurvey()?.title }}</h1>
+        <p class="description">{{ createdSurvey()?.description }}</p>
         <form (submit)="complete($event)">
           <div class="questions">
-            @for (question of questions; track $index; let questionIndex = $index) {
+            @for (question of questions(); track $index; let questionIndex = $index) {
               <fieldset [disabled]="submitted()">
                 <legend>{{ questionIndex + 1 }}. {{ question.title }}</legend>
                 <p class="answer-hint">
@@ -62,10 +59,10 @@
         </form>
       </section>
       <aside class="results-panel" aria-labelledby="results-title">
-        <h2 id="results-title">Survey results <span>LIVE</span></h2>
+        <h2 id="results-title">Survey results</h2>
         @if (hasResults()) {
           <div class="result-questions" aria-live="polite">
-            @for (question of questions; track $index; let questionIndex = $index) {
+            @for (question of questions(); track $index; let questionIndex = $index) {
               <section class="result-question" [attr.aria-label]="question.title">
                 <h3>{{ questionIndex + 1 }}. {{ question.title }}</h3>
                 @for (answer of question.answers; track $index; let answerIndex = $index) {
@@ -94,6 +91,10 @@
         }
       </aside>
     </main>
+  } @else if (loading()) {
+    <main class="not-found"><p role="status">Loading survey�</p></main>
+  } @else if (error()) {
+    <main class="not-found"><p role="alert">{{ error() }}</p><button type="button" class="peach-button" (click)="reload()">Try again</button></main>
   } @else {
     <main class="not-found">
       <h1>Survey not found</h1>

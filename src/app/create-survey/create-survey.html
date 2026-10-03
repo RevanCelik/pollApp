@@ -1,0 +1,39 @@
+<main class="create-page">
+  <section class="create-panel" aria-labelledby="create-title">
+    <span class="draft">Draft</span>
+    <header><h1 id="create-title">Create new survey</h1><a class="secondary" routerLink="/">Cancel <span aria-hidden="true">×</span></a></header>
+    <form (ngSubmit)="publish()">
+      <div class="form-panel">
+        <div class="metadata">
+          <div>
+            <label for="survey-name">Survey name</label>
+            <div class="input-row"><input id="survey-name" name="title" [(ngModel)]="title" /><button class="delete" type="button" aria-label="Clear survey name" (click)="title = ''"></button></div>
+            <div class="date-category">
+              <div><label for="end-date">Set end date <span>(optional)</span></label><div class="input-row"><input id="end-date" name="endDate" type="date" [min]="today" [(ngModel)]="endDate" /><button class="delete" type="button" aria-label="Clear end date" (click)="endDate = ''"></button></div></div>
+              <select name="category" aria-label="Choose category" [(ngModel)]="category"><option value="" disabled>Choose category</option><option>Team activities</option><option>Gaming</option><option>Healthy Lifestyle</option><option>Other</option></select>
+            </div>
+          </div>
+          <div><label for="description">Describing text <span>(optional)</span></label><div class="input-row"><textarea id="description" name="description" [(ngModel)]="description"></textarea><button class="delete" type="button" aria-label="Clear describing text" (click)="description = ''"></button></div></div>
+        </div>
+        <div class="questions" [class.single]="questions.length === 1">
+          @for (question of questions; track question; let qi = $index) {
+            <fieldset>
+              <div class="question-heading"><label [for]="'question-' + qi">{{ qi + 1 }}. Question</label><button class="delete" type="button" [attr.aria-label]="qi === 0 ? 'Clear question 1' : 'Delete question ' + (qi + 1)" (click)="deleteQuestion(qi)"></button></div>
+              <input [id]="'question-' + qi" [name]="'question-' + qi" [(ngModel)]="question.title" [placeholder]="qi === 0 ? 'Which date would work best for you?' : 'Choose the activities you prefer?'" />
+              <div class="answer-heading"><span>Answers</span><label class="multiple"><input type="checkbox" [name]="'multiple-' + qi" [(ngModel)]="question.multiple" /> Allow multiple answers.</label></div>
+              @for (answer of question.answers; track $index; let ai = $index) {
+                <div class="answer-row"><label [for]="'answer-' + qi + '-' + ai">{{ letter(ai) }}.</label><input [id]="'answer-' + qi + '-' + ai" [name]="'answer-' + qi + '-' + ai" [attr.aria-label]="'Question ' + (qi + 1) + ', answer ' + letter(ai)" [(ngModel)]="question.answers[ai]" /><button class="delete" type="button" [attr.aria-label]="'Delete answer ' + letter(ai) + ' from question ' + (qi + 1)" (click)="deleteAnswer(question, ai)"></button></div>
+              }
+              <button class="add-answer" type="button" (click)="question.answers.push('')">Add answer <span aria-hidden="true">⊕</span></button>
+            </fieldset>
+          }
+          <div class="add-question"><button class="secondary" type="button" (click)="addQuestion()">Add next question <span aria-hidden="true">⊕</span></button></div>
+        </div>
+      </div>
+      <footer>@if (error) { <p role="alert">{{ error }}</p> }<button class="publish" type="submit" [disabled]="!!publishedId || saving">{{ saving ? 'Publishing…' : 'Publish' }}</button></footer>
+    </form>
+  </section>
+  <dialog #confirmation (close)="viewSurvey()" (cancel)="viewSurvey()" aria-labelledby="confirmation-title">
+    <h2 id="confirmation-title">Survey published!</h2><p>Your survey is ready to collect answers.</p><button class="publish" type="button" (click)="confirmation.close()" autofocus>View survey</button>
+  </dialog>
+</main>

@@ -1,5 +1,32 @@
 # PollApp
 
+## Supabase setup
+
+The project URL and public publishable key are configured in
+`src/environments/environment.ts`. No secret/service-role key belongs in the frontend.
+
+Before using the app, apply `supabase/migrations/202610030001_create_surveys.sql`
+to that Supabase project through its SQL Editor, or through a connected Supabase
+integration. This creates the `surveys` table, nested question validation and
+row-level security policies. The migration was applied to the Poll App project (`mwccjmhrfkgxitdjglie`) on 2026-10-03. Anonymous-role insert/read and validation checks passed in a rolled-back transaction; the public REST API returns HTTP 200.
+
+Each survey stores its question texts, multiple-choice setting and answer options
+in the `questions` JSONB column. A single insert saves the complete survey
+atomically. Home and detail screens read from Supabase, including on a fresh visit.
+The confirmation dialog appears only after a successful insert; failed requests
+keep the form available for retry.
+
+The current app has no login. Published surveys are publicly readable and anyone
+can create a survey. The public API cannot update or delete surveys. There is no
+owner-specific filtering yet. Participant submissions and result counts are still
+demonstration behavior in the current browser, not saved to Supabase. Previous
+localStorage surveys are not automatically imported.
+
+After applying the migration, verify the live integration by publishing a survey
+with two questions, opening its detail URL in a fresh browser session and checking
+that its title, questions and answer options load. Automated tests mock Supabase
+and cover insert payloads, read mapping, rejected requests and retry behavior.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.7.
 
 ## Development server

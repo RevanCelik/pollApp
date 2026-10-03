@@ -1,3 +1,5 @@
+import { SurveyStore } from '../services/survey-store';
+import { mockSurveyStore } from '../services/survey-store.fixture';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -6,16 +8,16 @@ import { SurveyDetail } from './survey-detail';
 describe('Survey detail', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: 'surveys/:id', component: SurveyDetail }])],
+      providers: [provideRouter([{ path: 'surveys/:id', component: SurveyDetail }]), { provide: SurveyStore, useFactory: mockSurveyStore }],
     }).compileComponents();
   });
 
-  it('shows seeded results and the four questions', async () => {
+  it('loads the four questions with no fabricated results', async () => {
     const harness = await RouterTestingHarness.create('/surveys/1');
     const page = harness.routeNativeElement!;
     expect(page.querySelectorAll('fieldset').length).toBe(4);
-    expect(page.querySelectorAll('.result-row').length).toBe(16);
-    expect(page.querySelector('.empty-results')).toBeNull();
+    expect(page.querySelectorAll('.result-row').length).toBe(0);
+    expect(page.querySelector('.empty-results')).not.toBeNull();
   });
 
   it('validates answers, counts a submission and prevents another submission', async () => {

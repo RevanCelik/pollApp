@@ -1,3 +1,5 @@
+import { SurveyStore } from './services/survey-store';
+import { mockSurveyStore } from './services/survey-store.fixture';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
@@ -15,7 +17,7 @@ describe('App', () => {
 
 describe('Home', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [Home], providers: [provideRouter([])] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [Home], providers: [provideRouter([]), { provide: SurveyStore, useFactory: mockSurveyStore }] }).compileComponents();
   });
 
   it('renders the home screen and its survey cards', async () => {
