@@ -16,7 +16,18 @@ body {
 }
 button {
   font: inherit;
+  transition: background-color 140ms ease, color 140ms ease;
 }
+button:disabled { cursor: not-allowed; }
+.button-icon { display: inline-block; width: 16px; height: 16px; margin-left: 8px; vertical-align: middle; }
+.add-icon { border: 1.5px solid currentColor; border-radius: 50%; position: relative; }
+.add-icon::before, .add-icon::after { content: ''; position: absolute; background: currentColor; left: 3px; right: 3px; top: 6px; height: 1px; }
+.add-icon::after { transform: rotate(90deg); }
+.check-icon { background: url('/assets/checkbox=checked.svg') center / 21px no-repeat; }
+.new-survey .button-icon, .peach-button:not(:disabled) .button-icon { visibility: hidden; }
+.new-survey:hover .button-icon, .new-survey:focus-visible .button-icon,
+.peach-button:hover:not(:disabled) .button-icon, .peach-button:focus-visible .button-icon { visibility: visible; }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
 button:not(:disabled) {
   cursor: pointer;
 }

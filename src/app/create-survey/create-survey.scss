@@ -6,6 +6,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 h1 { font-family: 'Comic Sans MS', 'Segoe Print', cursive; color: #ff9e31; font-size: 38px; margin: 0; }
 .secondary { display: inline-flex; align-items: center; gap: 12px; background: #795b55; color: white; border: 0; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-weight: 600; text-decoration: none; }
 .secondary span { font-size: 20px; line-height: 1; }
+.secondary:hover, .secondary:focus-visible { background: #a17d6c; }
 .form-panel { background: #44334c; padding: 36px 30px; border-radius: 4px 70px 4px 4px; }
 .metadata, .questions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px 64px; }
 .questions { margin-top: 54px; }
@@ -13,26 +14,40 @@ label { font-size: 15px; display: block; margin-bottom: 4px; }
 label span { font-weight: 400; opacity: .85; }
 input:not([type=checkbox]), textarea { width: 100%; min-width: 0; border: 0; border-radius: 4px 18px 4px 4px; background: #fffcff; color: #35273a; padding: 8px 12px; font: inherit; font-size: 14px; }
 input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+input:not([type=checkbox]):hover, input:not([type=checkbox]):focus,
+textarea:hover, textarea:focus { background: #ffe8d2; }
+input::placeholder, textarea::placeholder { color: #514458; opacity: 1; }
 textarea { height: 96px; resize: vertical; }
 .input-row { display: flex; align-items: flex-start; gap: 8px; }
 .delete { flex: 0 0 24px; width: 24px; height: 30px; background: url('/assets/delete=default.svg') center / 18px no-repeat; border: 0; }
 .delete:hover { background-image: url('/assets/delete=hover.svg'); }
 .date-category { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; margin-top: 10px; }
 select { min-width: 0; align-self: start; background: #44334c; color: white; border: 0; padding: 0 4px; font: inherit; font-size: 14px; }
+select:hover, select:focus { background: #605367; border-radius: 4px; }
+select option { background: #fffcff; color: #35273a; }
 fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .question-heading, .answer-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .answer-heading { margin: 24px 0 12px; font-size: 15px; }
 .multiple { display: flex; align-items: center; gap: 4px; font-size: 11px; margin: 0; }
-.multiple input { margin: 0; accent-color: var(--accent); }
+.multiple input { appearance: none; margin: 0; width: 14px; height: 14px; border: 1px solid #faf5fe; border-radius: 2px; cursor: pointer; }
+.multiple:hover input:not(:checked) { background: #ffcfa199; }
+.multiple input:checked { border-color: var(--accent); background: url('/assets/checkbox=checked.svg') center / 19px no-repeat; }
 .answer-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .answer-row label { margin: 0; min-width: 16px; }
 .add-answer { background: transparent; border: 0; color: white; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; font-size: 13px; margin: 12px 0 0 24px; padding: 6px; }
+.add-answer:hover:not(:disabled), .add-answer:focus-visible { background: #605367; }
+.add-answer:disabled { opacity: .5; }
+.answer-limit { display: inline-block; margin-left: 12px; font-size: 11px; color: #e3d8e7; }
 .add-question { grid-column: 1 / -1; }
+.add-question-button { display: inline-block; max-width: 100%; padding: 0; border: 0; border-radius: 10px; background: transparent; }
+.add-question-button img { display: block; max-width: 100%; height: auto; }
+.add-question-button:hover, .add-question-button:focus-visible { background: #ffb77033; }
 .single .add-question { grid-column: 2; grid-row: 1; }
 footer { display: flex; align-items: center; justify-content: flex-end; gap: 24px; margin-top: 42px; }
 footer p { margin: 0; font-size: 14px; }
 .publish { background: var(--peach); color: #221227; border: 0; border-radius: 9px; font-weight: 700; padding: 14px 16px; }
-.publish:hover { background: var(--accent); }
+.publish:hover:not(:disabled), .publish:focus-visible { background: var(--accent); }
+.publish:disabled { opacity: .65; }
 dialog { max-width: calc(100% - 32px); padding: 36px; background: #44334c; color: white; border: 0; border-radius: 4px 42px 4px 4px; text-align: center; }
 dialog::backdrop { background: #221227aa; }
 dialog h2 { color: var(--accent); }

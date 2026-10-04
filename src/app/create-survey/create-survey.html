@@ -24,10 +24,11 @@
               @for (answer of question.answers; track $index; let ai = $index) {
                 <div class="answer-row"><label [for]="'answer-' + qi + '-' + ai">{{ letter(ai) }}.</label><input [id]="'answer-' + qi + '-' + ai" [name]="'answer-' + qi + '-' + ai" [attr.aria-label]="'Question ' + (qi + 1) + ', answer ' + letter(ai)" [(ngModel)]="question.answers[ai]" /><button class="delete" type="button" [attr.aria-label]="'Delete answer ' + letter(ai) + ' from question ' + (qi + 1)" (click)="deleteAnswer(question, ai)"></button></div>
               }
-              <button class="add-answer" type="button" (click)="question.answers.push('')">Add answer <span aria-hidden="true">⊕</span></button>
+              <button class="add-answer" type="button" [disabled]="question.answers.length >= 6" (click)="addAnswer(question)">Add answer <span aria-hidden="true">⊕</span></button>
+              <span class="answer-limit">You can add up to 6 answer fields.</span>
             </fieldset>
           }
-          <div class="add-question"><button class="secondary" type="button" (click)="addQuestion()">Add next question <span aria-hidden="true">⊕</span></button></div>
+          <div class="add-question"><button class="add-question-button" type="button" aria-label="Add next question" (click)="addQuestion()"><img src="assets/addnextquestion.svg" alt="" width="204" height="40" /></button></div>
         </div>
       </div>
       <footer>@if (error) { <p role="alert">{{ error }}</p> }<button class="publish" type="submit" [disabled]="!!publishedId || saving">{{ saving ? 'Publishing…' : 'Publish' }}</button></footer>

@@ -4,7 +4,7 @@
       ><img src="assets/pollapplogo=Purple%20dark.svg" alt="Poll App"
     /></a>
     <button class="peach-button" type="button" routerLink="/surveys/new">
-      Create survey
+      Create survey <span class="button-icon add-icon" aria-hidden="true"></span>
     </button>
   </header>
   @if (found()) {
@@ -53,7 +53,7 @@
               <p class="feedback" role="status">Thank you! Your demo answers have been counted.</p>
             }
             <button class="peach-button" type="submit" [disabled]="submitted()">
-              {{ submitted() ? 'Survey completed' : 'Complete survey' }}
+              {{ submitted() ? 'Survey completed' : 'Complete survey' }} <span class="button-icon check-icon" aria-hidden="true"></span>
             </button>
           </div>
         </form>

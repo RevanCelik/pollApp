@@ -36,6 +36,7 @@ header img {
 .peach-button:disabled {
   cursor: not-allowed;
 }
+.peach-button:disabled { opacity: .65; }
 .detail-layout {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(230px, 1fr);
@@ -58,7 +59,7 @@ header img {
 }
 .status {
   background: var(--accent);
-  border-radius: 20px;
+  border-radius: 0;
   padding: 4px 10px;
 }
 h1 {
@@ -107,9 +108,11 @@ legend {
   line-height: 1.3;
   cursor: pointer;
 }
-.answer:hover {
+.answer:hover:has(input:not(:disabled)) {
   background: #ffe8d2;
 }
+.answer:focus-within { background: #ffe8d2; }
+.answer:hover input:not(:checked):not(:disabled) { background: #ffcfa199; }
 .answer input {
   appearance: none;
   flex: 0 0 15px;

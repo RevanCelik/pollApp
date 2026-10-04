@@ -26,6 +26,9 @@ export class CreateSurvey {
   private emptyQuestion(): SurveyQuestion {
     return { title: '', multiple: false, answers: ['', ''], votes: [] };
   }
+  protected addAnswer(question: SurveyQuestion): void {
+    if (question.answers.length < 6) question.answers.push('');
+  }
   protected addQuestion(): void { this.questions.push(this.emptyQuestion()); }
   protected deleteQuestion(index: number): void {
     if (index === 0) this.questions[0] = this.emptyQuestion();

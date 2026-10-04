@@ -23,14 +23,15 @@ export class Home {
   constructor() { void this.store.load(); }
   protected reload(): void { void this.store.load(); }
   protected readonly selectedStatus = signal<'active' | 'past'>('active');
-  protected readonly sortByCategory = signal(false);
+  protected readonly selectedCategory = signal('');
+  protected readonly categoryMenuOpen = signal(false);
+  protected readonly categories = computed(() => [...new Set(this.surveys().map(s => s.category))].sort());
+  protected selectCategory(category: string): void { this.selectedCategory.set(category); this.categoryMenuOpen.set(false); }
   protected readonly visibleSurveys = computed(() => {
     const items = this.surveys().filter(s => this.selectedStatus() === 'active'
       ? s.daysLeft === null || s.daysLeft >= 0
       : s.daysLeft !== null && s.daysLeft < 0);
-    return this.sortByCategory()
-      ? items.sort((a, b) => a.category.localeCompare(b.category))
-      : items;
+    return items.filter(s => !this.selectedCategory() || s.category === this.selectedCategory());
   });
   protected deadline(days: number): string {
     return `Ends in ${days} ${days === 1 ? 'Day' : 'Days'}`;

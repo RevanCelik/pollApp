@@ -43,16 +43,24 @@ describe('Home', () => {
     expect(page.querySelectorAll('.survey-card').length).toBe(6);
   });
 
-  it('sorts categories and restores the original order', async () => {
+  it('filters through the category menu and restores all surveys', async () => {
     const fixture = TestBed.createComponent(Home);
     await fixture.whenStable();
     const page = fixture.nativeElement as HTMLElement;
     const sort = page.querySelector<HTMLButtonElement>('.sort')!;
     sort.click();
     await fixture.whenStable();
-    expect(page.querySelector('.survey-card .category')?.textContent).toBe('Gaming');
+    expect(sort.getAttribute('aria-expanded')).toBe('true');
+    const gaming = [...page.querySelectorAll<HTMLButtonElement>('.category-options button')].find(button => button.textContent?.trim() === 'Gaming')!;
+    gaming.click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('.survey-card').length).toBe(5);
+    expect(page.querySelector('.category-options')).toBeNull();
+    expect(page.querySelector('.selected-category')?.textContent).toBe('Gaming');
     sort.click();
     await fixture.whenStable();
-    expect(page.querySelector('.survey-card .category')?.textContent).toBe('Team activities');
+    page.querySelector<HTMLButtonElement>('.category-options button')!.click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('.survey-card').length).toBe(6);
   });
 });

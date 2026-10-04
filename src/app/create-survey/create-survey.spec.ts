@@ -27,6 +27,22 @@ describe('Create survey', () => {
     expect(page.querySelectorAll('fieldset').length).toBe(1);
   });
 
+  it('limits each question to six answers and allows adding again after deletion', async () => {
+    const fixture = TestBed.createComponent(CreateSurvey);
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    const add = page.querySelector<HTMLButtonElement>('.add-answer')!;
+    for (let index = 0; index < 5; index++) { add.click(); await fixture.whenStable(); }
+    expect(page.querySelectorAll('.answer-row').length).toBe(6);
+    expect(add.disabled).toBe(true);
+    page.querySelector<HTMLButtonElement>('[aria-label="Delete answer A from question 1"]')!.click();
+    await fixture.whenStable();
+    expect(add.disabled).toBe(false);
+    add.click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('.answer-row').length).toBe(6);
+  });
+
   it('validates before saving and opens the publication confirmation', async () => {
     const fixture = TestBed.createComponent(CreateSurvey);
     await fixture.whenStable();

@@ -39,16 +39,26 @@ h1 {
   margin: 0 0 32px;
 }
 .new-survey {
+  position: relative;
+  width: 172px;
+  height: 48px;
   background: var(--peach);
   color: #221227;
   border: 0;
-  border-radius: 8px;
-  padding: 14px 18px;
+  border-radius: 10px;
+  padding: 0;
   font-weight: 700;
 }
+.new-survey img { position: absolute; top: 0; left: 0; }
+.primary-hover, .primary-pressed { visibility: hidden; }
+.new-survey:hover .primary-default, .new-survey:focus-visible .primary-default { visibility: hidden; }
+.new-survey:hover .primary-hover, .new-survey:focus-visible .primary-hover { visibility: visible; }
+.new-survey:active .primary-default, .new-survey:active .primary-hover { visibility: hidden; }
+.new-survey:active .primary-pressed { visibility: visible; }
 .new-survey:disabled {
   cursor: not-allowed;
 }
+.new-survey:hover, .new-survey:focus-visible, .new-survey:active { background: #ffb770; }
 .hero-art {
   position: relative;
   width: 100%;
@@ -89,6 +99,20 @@ h1 {
   left: 0;
   bottom: 5%;
   z-index: 3;
+}
+// Hover interaction is available only on desktop devices with a mouse.
+@media (min-width: 1025px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .hero-art .survey-image { transition: transform 650ms ease; }
+  .hero-art .bubble { transition: transform 450ms ease; }
+  .hero-art .check { transition: transform 750ms ease; }
+  .hero-art .question { transition: transform 550ms ease; }
+  .hero-art .star { transition: transform 850ms ease; }
+
+  .hero-art:hover .survey-image { transform: translate(4px, -6px) rotate(2deg); }
+  .hero-art:hover .bubble { transform: translate(-18px, -20px) rotate(-8deg) scale(1.08); }
+  .hero-art:hover .check { transform: translate(24px, 10px) rotate(8deg); }
+  .hero-art:hover .question { transform: translate(6px, -10px) rotate(10deg); }
+  .hero-art:hover .star { transform: translate(-8px, 12px) rotate(-12deg); }
 }
 .surveys {
   max-width: 1040px;
@@ -133,6 +157,10 @@ h4 {
 .highlight-card .deadline {
   margin-top: auto;
 }
+.highlight-card:hover, .highlight-card:focus-within { background: #f2e7fa; }
+.highlight-card, .survey-card { position: relative; transition: background-color 140ms ease; }
+h4 a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+h4 a:hover { text-decoration: none; }
 .deadline {
   display: inline-block;
   background: var(--peach);
@@ -160,10 +188,10 @@ h4 {
   padding: 4px 10px;
   font-size: 12px;
 }
-.filters button.active,
-.filters button:hover {
+.filters button.active {
   background: var(--accent);
 }
+.filters button:hover, .filters button:focus-visible { background: var(--peach); }
 .sort {
   background: transparent;
   color: white;
@@ -174,6 +202,16 @@ h4 {
 .sort span {
   margin-left: 8px;
 }
+.sort { display: flex; align-items: center; border-radius: 4px; }
+.sort:hover, .sort:focus-visible, .sort.expanded { background: #605367; }
+.arrow { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid currentColor; }
+.sort:hover .arrow, .sort.expanded .arrow { border-top-color: var(--accent); }
+.sort.expanded .arrow { transform: rotate(180deg); }
+.category-dropdown { position: relative; }
+.selected-category { color: var(--accent); font-size: 12px; margin: 8px 6px 0; }
+.category-options { position: absolute; z-index: 5; top: 100%; right: 0; min-width: 210px; max-width: calc(100vw - 48px); padding: 8px; background: #fffcff; border-radius: 4px; box-shadow: 0 6px 20px #22122733; }
+.category-options button { display: block; width: 100%; text-align: left; padding: 8px; border: 0; border-radius: 3px; background: transparent; color: var(--text-dark); font-size: 13px; }
+.category-options button:hover, .category-options button:focus-visible, .category-options button.selected { background: #f2e7fa; }
 .survey-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -196,6 +234,10 @@ h4 {
 .survey-card .category {
   color: var(--peach);
 }
+.survey-card:hover, .survey-card:focus-within { background: #605367; }
+.survey-list::-webkit-scrollbar { width: 6px; }
+.survey-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 8px; }
+.survey-list::-webkit-scrollbar-track { background: #605367; border-radius: 8px; }
 .survey-card h4 {
   font-size: 18px;
 }
