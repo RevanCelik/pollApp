@@ -18,8 +18,11 @@ keep the form available for retry.
 
 The current app has no login. Published surveys are publicly readable and anyone
 can create a survey. The public API cannot update or delete surveys. There is no
-owner-specific filtering yet. Participant submissions and result counts are still
-demonstration behavior in the current browser, not saved to Supabase. Previous
+owner-specific filtering yet. Participant submissions are saved in Supabase by
+`supabase/migrations/20261005042218_persist_survey_responses.sql` (applied to the
+Poll App project on 2026-10-05). Results are counted from saved submissions on
+every visit. Each submission is inserted atomically, validated against the survey,
+and cannot be changed or deleted through the public API. Previous
 localStorage surveys are not automatically imported.
 
 After applying the migration, verify the live integration by publishing a survey

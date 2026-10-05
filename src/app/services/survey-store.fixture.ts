@@ -17,6 +17,13 @@ export function mockSurveyStore() {
   return {
     surveys, loading: signal(false), error: signal(''),
     load: async () => {},
+    submit: async (id: string, choices: number[][]) => {
+      surveys.update(items => items.map(survey => survey.id !== id ? survey : {
+        ...survey, questions: survey.questions.map((question, index) => ({
+          ...question, votes: question.votes.map((count, answer) => count + (choices[index].includes(answer) ? 1 : 0)),
+        })),
+      }));
+    },
     publish: async (survey: Omit<CreatedSurvey, 'id'>) => {
       surveys.update(items => [{ ...survey, id: 'published-id' }, ...items]);
       return 'published-id';

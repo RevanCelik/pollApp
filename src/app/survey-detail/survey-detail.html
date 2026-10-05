@@ -22,7 +22,7 @@
         <form (submit)="complete($event)">
           <div class="questions">
             @for (question of questions(); track $index; let questionIndex = $index) {
-              <fieldset [disabled]="submitted()">
+              <fieldset [disabled]="submitted() || saving()">
                 <legend>{{ questionIndex + 1 }}. {{ question.title }}</legend>
                 <p class="answer-hint">
                   {{
@@ -34,7 +34,7 @@
                     <input
                       [type]="question.multiple ? 'checkbox' : 'radio'"
                       [name]="'question-' + questionIndex"
-                      [checked]="choices()[questionIndex].includes(answerIndex)"
+                      [checked]="choices()[questionIndex]?.includes(answerIndex)"
                       (change)="choose(questionIndex, answerIndex)"
                     />
                     <span>{{ letter(answerIndex) }}. {{ answer }}</span>
@@ -50,10 +50,11 @@
               </p>
             }
             @if (submitted()) {
-              <p class="feedback" role="status">Thank you! Your demo answers have been counted.</p>
+              <p class="feedback" role="status">Thank you! Your answers have been saved.</p>
             }
-            <button class="peach-button" type="submit" [disabled]="submitted()">
-              {{ submitted() ? 'Survey completed' : 'Complete survey' }} <span class="button-icon check-icon" aria-hidden="true"></span>
+            @if (submitError()) { <p class="feedback" role="alert">{{ submitError() }}</p> }
+            <button class="peach-button" type="submit" [disabled]="submitted() || saving()">
+              {{ saving() ? 'Saving answers...' : submitted() ? 'Survey completed' : 'Complete survey' }} <span class="button-icon check-icon" aria-hidden="true"></span>
             </button>
           </div>
         </form>
@@ -92,7 +93,7 @@
       </aside>
     </main>
   } @else if (loading()) {
-    <main class="not-found"><p role="status">Loading survey…</p></main>
+    <main class="not-found"><p role="status">Loading survey...</p></main>
   } @else if (error()) {
     <main class="not-found"><p role="alert">{{ error() }}</p><button type="button" class="peach-button" (click)="reload()">Try again</button></main>
   } @else {

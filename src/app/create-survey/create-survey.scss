@@ -1,7 +1,7 @@
 :host { display: block; min-height: 100vh; background: #fffcff; }
 .create-page { padding: 64px 24px; }
 .create-panel { max-width: 1040px; margin: auto; padding: 36px 54px; background: #35273a; border-radius: 4px 90px 4px 4px; }
-.draft { background: var(--peach); color: #35273a; font-size: 13px; padding: 3px 8px; }
+.draft { background: var(--peach); color: #35273a; font-size: 13px; border-radius: 0 18px 0 0; padding: 3px 14px 3px 8px; }
 header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 8px 0 30px; }
 h1 { font-family: 'Comic Sans MS', 'Segoe Print', cursive; color: #ff9e31; font-size: 38px; margin: 0; }
 .secondary { display: inline-flex; align-items: center; gap: 12px; background: #795b55; color: white; border: 0; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-weight: 600; text-decoration: none; }

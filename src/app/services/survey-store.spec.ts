@@ -52,4 +52,34 @@ describe('Supabase survey store', () => {
     await store.load();
     expect(store.error()).toBe('');
   });
+
+  it('loads saved results on a fresh visit, including multiple answers', async () => {
+    const { store, query } = setup();
+    query.order.mockResolvedValue({ data: [{ ...survey, id: 'remote-id', end_date: null,
+      survey_responses: [{ choices: [[0]] }, { choices: [[1]] }, { choices: [[0, 1]] }] }], error: null });
+    await store.load();
+    expect(store.surveys()[0].questions[0].votes).toEqual([2, 2]);
+  });
+
+  it('saves a submission before updating counts and preserves results after reload', async () => {
+    const { store, query, from } = setup();
+    store.surveys.set([{ ...survey, id: 'remote-id' }]);
+    query.insert.mockResolvedValue({ error: null });
+    await store.submit('remote-id', [[1]]);
+    expect(from).toHaveBeenCalledWith('survey_responses');
+    expect(query.insert).toHaveBeenCalledWith({ survey_id: 'remote-id', choices: [[1]] });
+    expect(store.surveys()[0].questions[0].votes).toEqual([0, 1]);
+    query.order.mockResolvedValue({ data: [{ ...survey, id: 'remote-id', end_date: null,
+      survey_responses: [{ choices: [[1]] }] }], error: null });
+    await store.load();
+    expect(store.surveys()[0].questions[0].votes).toEqual([0, 1]);
+  });
+
+  it('does not count rejected submissions', async () => {
+    const { store, query } = setup();
+    store.surveys.set([{ ...survey, id: 'remote-id' }]);
+    query.insert.mockResolvedValue({ error: { message: 'Offline' } });
+    await expect(store.submit('remote-id', [[0]])).rejects.toEqual({ message: 'Offline' });
+    expect(store.surveys()[0].questions[0].votes).toEqual([0, 0]);
+  });
 });

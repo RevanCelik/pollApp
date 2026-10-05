@@ -165,7 +165,8 @@ h4 a:hover { text-decoration: none; }
   display: inline-block;
   background: var(--peach);
   color: var(--text-dark);
-  padding: 3px 6px;
+  border-top-right-radius: 18px;
+  padding: 3px 12px 3px 6px;
   font-size: 12px;
   white-space: nowrap;
 }

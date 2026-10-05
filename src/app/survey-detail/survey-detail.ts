@@ -22,7 +22,9 @@ export class SurveyDetail {
   protected readonly found = computed(() => !!this.createdSurvey());
   protected readonly questions = computed(() => this.createdSurvey()?.questions ?? []);
   protected readonly choices = signal<number[][]>([]);
-  protected readonly counts = signal<number[][]>([]);
+  protected readonly counts = computed(() => this.questions().map(question => question.votes));
+  protected readonly saving = signal(false);
+  protected readonly submitError = signal('');
   protected readonly submitted = signal(false);
   protected readonly showValidation = signal(false);
   protected readonly hasResults = computed(() =>
@@ -38,25 +40,28 @@ export class SurveyDetail {
   constructor() {
     void this.store.load();
     effect(() => {
-      this.counts.set(
-        this.questions().map((question) => question.votes.map(() => 0)),
-      );
-      this.choices.set(this.questions().map(() => []));
+      const id = this.surveyId();
+      if (id === this.activeSurveyId) return;
+      this.activeSurveyId = id;
+      this.choices.set([]);
       this.submitted.set(false);
       this.showValidation.set(false);
+      this.submitError.set('');
     });
   }
 
   protected reload(): void { void this.store.load(); }
+  private activeSurveyId: string | null | undefined;
 
   protected letter(index: number): string {
     return String.fromCharCode(65 + index);
   }
 
   protected choose(questionIndex: number, answerIndex: number): void {
-    if (this.submitted()) return;
+    if (this.submitted() || this.saving()) return;
     this.choices.update((rows) =>
-      rows.map((row, index) => {
+      this.questions().map((_, index) => {
+        const row = rows[index] ?? [];
         if (index !== questionIndex) return row;
         if (!this.questions()[index].multiple) return [answerIndex];
         return row.includes(answerIndex)
@@ -66,22 +71,22 @@ export class SurveyDetail {
     );
   }
 
-  protected complete(event: Event): void {
+  protected async complete(event: Event): Promise<void> {
     event.preventDefault();
-    if (this.submitted()) return;
-    if (this.choices().some((row) => row.length === 0)) {
+    if (this.submitted() || this.saving()) return;
+    if (!this.questions().length || this.questions().some((_, index) => !this.choices()[index]?.length)) {
       this.showValidation.set(true);
       return;
     }
-    this.counts.update((rows) =>
-      rows.map((row, questionIndex) =>
-        row.map(
-          (count, answerIndex) =>
-            count + (this.choices()[questionIndex].includes(answerIndex) ? 1 : 0),
-        ),
-      ),
-    );
-    this.submitted.set(true);
+    const surveyId = this.surveyId()!;
+    this.saving.set(true);
+    this.submitError.set('');
     this.showValidation.set(false);
+    try {
+      await this.store.submit(surveyId, this.choices());
+      if (this.surveyId() === surveyId) this.submitted.set(true);
+    } catch {
+      if (this.surveyId() === surveyId) this.submitError.set('Your answers could not be saved. Please try again.');
+    } finally { this.saving.set(false); }
   }
 }

@@ -35,19 +35,33 @@ export class SurveyStore {
     this.error.set('');
     try {
       const { data, error } = await this.client.from('surveys')
-        .select('id,title,description,category,end_date,questions')
+        .select('id,title,description,category,end_date,questions,survey_responses(choices)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       this.surveys.set((data ?? []).map(row => ({
         id: row.id, title: row.title, description: row.description,
         category: row.category, endDate: row.end_date ?? '',
-        questions: row.questions.map((question: Omit<SurveyQuestion, 'votes'>) => ({
-          ...question, votes: question.answers.map(() => 0),
+        questions: row.questions.map((question: Omit<SurveyQuestion, 'votes'>, questionIndex: number) => ({
+          ...question, votes: question.answers.map((_, answerIndex) =>
+            (row.survey_responses ?? []).filter((response: { choices: number[][] }) =>
+              response.choices[questionIndex]?.includes(answerIndex)).length),
         })),
       })));
     } catch {
       this.error.set('Surveys could not be loaded. Please try again.');
     } finally { this.loading.set(false); }
+  }
+
+  async submit(surveyId: string, choices: number[][]): Promise<void> {
+    const { error } = await this.client.from('survey_responses').insert({ survey_id: surveyId, choices });
+    if (error) throw error;
+    this.surveys.update(surveys => surveys.map(survey => survey.id !== surveyId ? survey : {
+      ...survey,
+      questions: survey.questions.map((question, index) => ({
+        ...question,
+        votes: question.votes.map((count, answer) => count + (choices[index].includes(answer) ? 1 : 0)),
+      })),
+    }));
   }
 
   async publish(survey: Omit<CreatedSurvey, 'id'>): Promise<string> {

@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { SurveyDetail } from './survey-detail';
+import { vi } from 'vitest';
 
 describe('Survey detail', () => {
   beforeEach(async () => {
@@ -33,6 +34,7 @@ describe('Survey detail', () => {
     }
     harness.detectChanges();
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await harness.fixture.whenStable();
     harness.detectChanges();
     expect(page.querySelector('.empty-results')).toBeNull();
     expect(page.querySelectorAll('.percentage')[0].textContent).toBe('100%');
@@ -54,6 +56,37 @@ describe('Survey detail', () => {
     expect(activities[0].checked && activities[1].checked).toBe(true);
     expect(duration[0].checked).toBe(false);
     expect(duration[1].checked).toBe(true);
+  });
+
+  it('shows saved results when reopening a survey', async () => {
+    const harness = await RouterTestingHarness.create('/surveys/6');
+    const store = TestBed.inject(SurveyStore);
+    await store.submit('6', [[0], [1], [0], [2]]);
+    await harness.navigateByUrl('/surveys/1');
+    await harness.navigateByUrl('/surveys/6');
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.querySelector('.empty-results')).toBeNull();
+    expect(harness.routeNativeElement!.querySelector('.percentage')?.textContent).toBe('100%');
+  });
+
+  it('keeps answers available for retry after a failed save', async () => {
+    const harness = await RouterTestingHarness.create('/surveys/6');
+    const page = harness.routeNativeElement!;
+    const submit = vi.spyOn(TestBed.inject(SurveyStore), 'submit').mockRejectedValueOnce(new Error('Offline'));
+    for (const field of page.querySelectorAll('fieldset')) field.querySelector<HTMLInputElement>('input')!.click();
+    const form = page.querySelector('form')!;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain('could not be saved');
+    expect(page.querySelector('.empty-results')).not.toBeNull();
+    expect(page.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(false);
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(submit).toHaveBeenCalledTimes(2);
+    expect(page.querySelector('.empty-results')).toBeNull();
+    expect(page.querySelector('[role="alert"]')).toBeNull();
   });
 
   it('resets the example state when navigating to the other survey', async () => {
