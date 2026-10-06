@@ -9,7 +9,10 @@ import { vi } from 'vitest';
 describe('Survey detail', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: 'surveys/:id', component: SurveyDetail }]), { provide: SurveyStore, useFactory: mockSurveyStore }],
+      providers: [
+        provideRouter([{ path: 'surveys/:id', component: SurveyDetail }]),
+        { provide: SurveyStore, useFactory: mockSurveyStore },
+      ],
     }).compileComponents();
   });
 
@@ -72,8 +75,11 @@ describe('Survey detail', () => {
   it('keeps answers available for retry after a failed save', async () => {
     const harness = await RouterTestingHarness.create('/surveys/6');
     const page = harness.routeNativeElement!;
-    const submit = vi.spyOn(TestBed.inject(SurveyStore), 'submit').mockRejectedValueOnce(new Error('Offline'));
-    for (const field of page.querySelectorAll('fieldset')) field.querySelector<HTMLInputElement>('input')!.click();
+    const submit = vi
+      .spyOn(TestBed.inject(SurveyStore), 'submit')
+      .mockRejectedValueOnce(new Error('Offline'));
+    for (const field of page.querySelectorAll('fieldset'))
+      field.querySelector<HTMLInputElement>('input')!.click();
     const form = page.querySelector('form')!;
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();

@@ -1,8 +1,13 @@
 :host {
   display: block;
 }
-h4 a { color: inherit; text-decoration: none; }
-h4 a:hover { text-decoration: underline; }
+h4 a {
+  color: inherit;
+  text-decoration: none;
+}
+h4 a:hover {
+  text-decoration: underline;
+}
 .home {
   max-width: 1440px;
   min-height: 100vh;
@@ -16,7 +21,7 @@ h4 a:hover { text-decoration: underline; }
 }
 .hero {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   align-items: center;
   gap: 32px;
   margin-top: 70px;
@@ -49,16 +54,38 @@ h1 {
   padding: 0;
   font-weight: 700;
 }
-.new-survey img { position: absolute; top: 0; left: 0; }
-.primary-hover, .primary-pressed { visibility: hidden; }
-.new-survey:hover .primary-default, .new-survey:focus-visible .primary-default { visibility: hidden; }
-.new-survey:hover .primary-hover, .new-survey:focus-visible .primary-hover { visibility: visible; }
-.new-survey:active .primary-default, .new-survey:active .primary-hover { visibility: hidden; }
-.new-survey:active .primary-pressed { visibility: visible; }
+.new-survey img {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.primary-hover,
+.primary-pressed {
+  visibility: hidden;
+}
+.new-survey:hover .primary-default,
+.new-survey:focus-visible .primary-default {
+  visibility: hidden;
+}
+.new-survey:hover .primary-hover,
+.new-survey:focus-visible .primary-hover {
+  visibility: visible;
+}
+.new-survey:active .primary-default,
+.new-survey:active .primary-hover {
+  visibility: hidden;
+}
+.new-survey:active .primary-pressed {
+  visibility: visible;
+}
 .new-survey:disabled {
   cursor: not-allowed;
 }
-.new-survey:hover, .new-survey:focus-visible, .new-survey:active { background: #ffb770; }
+.new-survey:hover,
+.new-survey:focus-visible,
+.new-survey:active {
+  background: #ffb770;
+}
 .hero-art {
   position: relative;
   width: 100%;
@@ -102,17 +129,37 @@ h1 {
 }
 // Hover interaction is available only on desktop devices with a mouse.
 @media (min-width: 1025px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .hero-art .survey-image { transition: transform 650ms ease; }
-  .hero-art .bubble { transition: transform 450ms ease; }
-  .hero-art .check { transition: transform 750ms ease; }
-  .hero-art .question { transition: transform 550ms ease; }
-  .hero-art .star { transition: transform 850ms ease; }
+  .hero-art .survey-image {
+    transition: transform 650ms ease;
+  }
+  .hero-art .bubble {
+    transition: transform 450ms ease;
+  }
+  .hero-art .check {
+    transition: transform 750ms ease;
+  }
+  .hero-art .question {
+    transition: transform 550ms ease;
+  }
+  .hero-art .star {
+    transition: transform 850ms ease;
+  }
 
-  .hero-art:hover .survey-image { transform: translate(4px, -6px) rotate(2deg); }
-  .hero-art:hover .bubble { transform: translate(-18px, -20px) rotate(-8deg) scale(1.08); }
-  .hero-art:hover .check { transform: translate(24px, 10px) rotate(8deg); }
-  .hero-art:hover .question { transform: translate(6px, -10px) rotate(10deg); }
-  .hero-art:hover .star { transform: translate(-8px, 12px) rotate(-12deg); }
+  .hero-art:hover .survey-image {
+    transform: translate(4px, -6px) rotate(2deg);
+  }
+  .hero-art:hover .bubble {
+    transform: translate(-18px, -20px) rotate(-8deg) scale(1.08);
+  }
+  .hero-art:hover .check {
+    transform: translate(24px, 10px) rotate(8deg);
+  }
+  .hero-art:hover .question {
+    transform: translate(6px, -10px) rotate(10deg);
+  }
+  .hero-art:hover .star {
+    transform: translate(-8px, 12px) rotate(-12deg);
+  }
 }
 .surveys {
   max-width: 1040px;
@@ -130,7 +177,7 @@ h3 {
 }
 .highlights {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 32px;
   padding: 0 6px;
 }
@@ -157,10 +204,24 @@ h4 {
 .highlight-card .deadline {
   margin-top: auto;
 }
-.highlight-card:hover, .highlight-card:focus-within { background: #f2e7fa; }
-.highlight-card, .survey-card { position: relative; transition: background-color 140ms ease; }
-h4 a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
-h4 a:hover { text-decoration: none; }
+.highlight-card:hover,
+.highlight-card:focus-within {
+  background: #f2e7fa;
+}
+.highlight-card,
+.survey-card {
+  position: relative;
+  transition: background-color 140ms ease;
+}
+h4 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+h4 a:hover {
+  text-decoration: none;
+}
 .deadline {
   display: inline-block;
   background: var(--peach);
@@ -192,7 +253,10 @@ h4 a:hover { text-decoration: none; }
 .filters button.active {
   background: var(--accent);
 }
-.filters button:hover, .filters button:focus-visible { background: var(--peach); }
+.filters button:hover,
+.filters button:focus-visible {
+  background: var(--peach);
+}
 .sort {
   background: transparent;
   color: white;
@@ -203,16 +267,66 @@ h4 a:hover { text-decoration: none; }
 .sort span {
   margin-left: 8px;
 }
-.sort { display: flex; align-items: center; border-radius: 4px; }
-.sort:hover, .sort:focus-visible, .sort.expanded { background: #605367; }
-.arrow { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid currentColor; }
-.sort:hover .arrow, .sort.expanded .arrow { border-top-color: var(--accent); }
-.sort.expanded .arrow { transform: rotate(180deg); }
-.category-dropdown { position: relative; }
-.selected-category { color: var(--accent); font-size: 12px; margin: 8px 6px 0; }
-.category-options { position: absolute; z-index: 5; top: 100%; right: 0; min-width: 210px; max-width: calc(100vw - 48px); padding: 8px; background: #fffcff; border-radius: 4px; box-shadow: 0 6px 20px #22122733; }
-.category-options button { display: block; width: 100%; text-align: left; padding: 8px; border: 0; border-radius: 3px; background: transparent; color: var(--text-dark); font-size: 13px; }
-.category-options button:hover, .category-options button:focus-visible, .category-options button.selected { background: #f2e7fa; }
+.sort {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}
+.sort:hover,
+.sort:focus-visible,
+.sort.expanded {
+  background: #605367;
+}
+.arrow {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+}
+.sort:hover .arrow,
+.sort.expanded .arrow {
+  border-top-color: var(--accent);
+}
+.sort.expanded .arrow {
+  transform: rotate(180deg);
+}
+.category-dropdown {
+  position: relative;
+}
+.selected-category {
+  color: var(--accent);
+  font-size: 12px;
+  margin: 8px 6px 0;
+}
+.category-options {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  right: 0;
+  min-width: 210px;
+  max-width: calc(100vw - 48px);
+  padding: 8px;
+  background: #fffcff;
+  border-radius: 4px;
+  box-shadow: 0 6px 20px #22122733;
+}
+.category-options button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-dark);
+  font-size: 13px;
+}
+.category-options button:hover,
+.category-options button:focus-visible,
+.category-options button.selected {
+  background: #f2e7fa;
+}
 .survey-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -235,10 +349,21 @@ h4 a:hover { text-decoration: none; }
 .survey-card .category {
   color: var(--peach);
 }
-.survey-card:hover, .survey-card:focus-within { background: #605367; }
-.survey-list::-webkit-scrollbar { width: 6px; }
-.survey-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 8px; }
-.survey-list::-webkit-scrollbar-track { background: #605367; border-radius: 8px; }
+.survey-card:hover,
+.survey-card:focus-within {
+  background: #605367;
+}
+.survey-list::-webkit-scrollbar {
+  width: 6px;
+}
+.survey-list::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 8px;
+}
+.survey-list::-webkit-scrollbar-track {
+  background: #605367;
+  border-radius: 8px;
+}
 .survey-card h4 {
   font-size: 18px;
 }
@@ -303,38 +428,122 @@ h4 a:hover { text-decoration: none; }
 }
 @media (max-width: 600px) {
   .home {
-    padding-inline: 24px;
+    padding: 48px 16px 32px;
+  }
+  .logo {
+    width: 119px;
   }
   .hero {
     grid-template-columns: 1fr;
-    margin-top: 40px;
+    margin-top: 56px;
+    gap: 24px;
+  }
+  .hero-copy {
+    display: contents;
   }
   h1 {
-    font-size: clamp(30px, 8vw, 42px);
+    grid-row: 1;
+    font-size: clamp(36px, 11.8vw, 48px);
+    line-height: 1.05;
+    max-width: 350px;
+    margin: 0;
+  }
+  .hero-copy p {
+    grid-row: 3;
+    font-size: 18px;
+    line-height: 1.25;
+    margin: 0;
+  }
+  .new-survey {
+    grid-row: 4;
+    justify-self: center;
+    margin-top: 28px;
+    background: var(--accent);
+  }
+  .new-survey .primary-default {
+    visibility: hidden;
+  }
+  .new-survey .primary-hover {
+    visibility: visible;
+  }
+  .new-survey:active .primary-hover {
+    visibility: hidden;
   }
   .hero-art {
+    grid-row: 2;
     width: min(260px, 100%);
     justify-self: center;
   }
   .surveys {
-    margin-top: 35px;
+    margin-top: 88px;
   }
   h2 {
-    font-size: 32px;
+    font-size: clamp(32px, 10vw, 44px);
+    margin-bottom: 48px;
+  }
+  h3 {
+    font-size: 24px;
+    margin-bottom: 16px;
   }
   .highlights {
-    grid-template-columns: 1fr;
-    padding: 0;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    margin-right: -16px;
+    padding: 0 16px 0 0;
     gap: 16px;
   }
+  .highlights::-webkit-scrollbar {
+    display: none;
+  }
   .highlight-card {
-    min-height: 200px;
+    flex: 0 0 250px;
+    min-height: 232px;
+    padding: 24px 16px;
+    border-top-right-radius: 80px;
+    scroll-snap-align: start;
+  }
+  .highlight-card h4 {
+    font-size: 24px;
+  }
+  .category,
+  .deadline {
+    font-size: 12px;
   }
   .toolbar {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 44px;
+    margin: 48px 0 24px;
+  }
+  .filters {
+    gap: 16px;
+  }
+  .filters button {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+  .sort {
+    font-size: 16px;
+  }
+  .category-options {
+    left: 0;
+    right: auto;
   }
   .survey-list {
     grid-template-columns: 1fr;
-    max-height: 420px;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    gap: 16px;
+  }
+  .survey-card {
+    min-height: 150px;
+    padding: 16px 20px 12px;
+    border-top-right-radius: 52px;
+  }
+  .survey-card h4 {
+    font-size: 20px;
   }
 }

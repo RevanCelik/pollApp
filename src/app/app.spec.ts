@@ -17,7 +17,10 @@ describe('App', () => {
 
 describe('Home', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [Home], providers: [provideRouter([]), { provide: SurveyStore, useFactory: mockSurveyStore }] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [Home],
+      providers: [provideRouter([]), { provide: SurveyStore, useFactory: mockSurveyStore }],
+    }).compileComponents();
   });
 
   it('renders the home screen and its survey cards', async () => {
@@ -51,7 +54,9 @@ describe('Home', () => {
     sort.click();
     await fixture.whenStable();
     expect(sort.getAttribute('aria-expanded')).toBe('true');
-    const gaming = [...page.querySelectorAll<HTMLButtonElement>('.category-options button')].find(button => button.textContent?.trim() === 'Gaming')!;
+    const gaming = [...page.querySelectorAll<HTMLButtonElement>('.category-options button')].find(
+      (button) => button.textContent?.trim() === 'Gaming',
+    )!;
     gaming.click();
     await fixture.whenStable();
     expect(page.querySelectorAll('.survey-card').length).toBe(5);

@@ -10,10 +10,15 @@
   @if (found()) {
     <main class="detail-layout">
       <section class="survey-panel" aria-labelledby="survey-title">
+        <div class="panel-heading">
+          <span class="status">Published</span>
+          <a class="close-survey" routerLink="/" aria-label="Close survey">×</a>
+        </div>
         <div class="metadata">
           <div>
-            <span class="status">Published</span>
-            <p>{{ createdSurvey()?.endDate ? 'Ends on ' + createdSurvey()?.endDate : 'No end date' }}</p>
+            <p>
+              {{ createdSurvey()?.endDate ? 'Ends on ' + createdSurvey()?.endDate : 'No end date' }}
+            </p>
           </div>
           <p>Category: {{ createdSurvey()?.category }}</p>
         </div>
@@ -52,50 +57,75 @@
             @if (submitted()) {
               <p class="feedback" role="status">Thank you! Your answers have been saved.</p>
             }
-            @if (submitError()) { <p class="feedback" role="alert">{{ submitError() }}</p> }
+            @if (submitError()) {
+              <p class="feedback" role="alert">{{ submitError() }}</p>
+            }
             <button class="peach-button" type="submit" [disabled]="submitted() || saving()">
-              {{ saving() ? 'Saving answers...' : submitted() ? 'Survey completed' : 'Complete survey' }} <span class="button-icon check-icon" aria-hidden="true"></span>
+              {{ saving() ? 'Saving answers...' : submitted() ? 'Survey completed' : 'Complete' }}
+              <span class="button-icon check-icon" aria-hidden="true"></span>
             </button>
           </div>
         </form>
       </section>
       <aside class="results-panel" aria-labelledby="results-title">
-        <h2 id="results-title">Survey results</h2>
-        @if (hasResults()) {
-          <div class="result-questions" aria-live="polite">
-            @for (question of questions(); track $index; let questionIndex = $index) {
-              <section class="result-question" [attr.aria-label]="question.title">
-                <h3>{{ questionIndex + 1 }}. {{ question.title }}</h3>
-                @for (answer of question.answers; track $index; let answerIndex = $index) {
-                  <div
-                    class="result-row"
-                    [attr.aria-label]="answer + ': ' + results()[questionIndex][answerIndex] + '%'"
-                  >
-                    <span class="letter">{{ letter(answerIndex) }}</span>
-                    <div class="bar-track">
-                      <div
-                        class="bar-fill"
-                        [style.width.%]="results()[questionIndex][answerIndex]"
-                      ></div>
-                    </div>
-                    <span class="percentage">{{ results()[questionIndex][answerIndex] }}%</span>
-                  </div>
-                }
-              </section>
+        <button
+          class="results-toggle"
+          type="button"
+          [attr.aria-expanded]="resultsOpen()"
+          aria-controls="survey-results"
+          (click)="resultsOpen.set(!resultsOpen())"
+        >
+          {{ resultsOpen() ? 'Close results' : 'Show results' }}
+          <span class="results-arrow" [class.open]="resultsOpen()" aria-hidden="true"></span>
+        </button>
+        <div id="survey-results" [class.mobile-collapsed]="!resultsOpen()">
+          <h2 id="results-title">
+            Survey results
+            @if (hasResults()) {
+              <span>LIVE</span>
             }
-          </div>
-        } @else {
-          <p class="results-description">
-            Results will be shown here after participants complete the survey.
-          </p>
-          <p class="empty-results" role="status">There are no answers yet.</p>
-        }
+          </h2>
+          @if (hasResults()) {
+            <div class="result-questions" aria-live="polite">
+              @for (question of questions(); track $index; let questionIndex = $index) {
+                <section class="result-question" [attr.aria-label]="question.title">
+                  <h3>{{ questionIndex + 1 }}. {{ question.title }}</h3>
+                  @for (answer of question.answers; track $index; let answerIndex = $index) {
+                    <div
+                      class="result-row"
+                      [attr.aria-label]="
+                        answer + ': ' + results()[questionIndex][answerIndex] + '%'
+                      "
+                    >
+                      <span class="letter">{{ letter(answerIndex) }}</span>
+                      <div class="bar-track">
+                        <div
+                          class="bar-fill"
+                          [style.width.%]="results()[questionIndex][answerIndex]"
+                        ></div>
+                      </div>
+                      <span class="percentage">{{ results()[questionIndex][answerIndex] }}%</span>
+                    </div>
+                  }
+                </section>
+              }
+            </div>
+          } @else {
+            <p class="results-description">
+              Results will be shown here after participants complete the survey.
+            </p>
+            <p class="empty-results" role="status">There are no answers yet.</p>
+          }
+        </div>
       </aside>
     </main>
   } @else if (loading()) {
     <main class="not-found"><p role="status">Loading survey...</p></main>
   } @else if (error()) {
-    <main class="not-found"><p role="alert">{{ error() }}</p><button type="button" class="peach-button" (click)="reload()">Try again</button></main>
+    <main class="not-found">
+      <p role="alert">{{ error() }}</p>
+      <button type="button" class="peach-button" (click)="reload()">Try again</button>
+    </main>
   } @else {
     <main class="not-found">
       <h1>Survey not found</h1>

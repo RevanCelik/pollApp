@@ -15,6 +15,20 @@ export interface CreatedSurvey {
   endDate: string;
   questions: SurveyQuestion[];
 }
+type StoredQuestion = Omit<SurveyQuestion, 'votes'>;
+interface SurveyResponse {
+  choices: number[][];
+}
+interface StoredSurvey {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  end_date: string | null;
+  questions: StoredQuestion[];
+  survey_responses?: SurveyResponse[];
+}
+type SurveyInsert = Omit<StoredSurvey, 'id' | 'survey_responses'>;
 
 @Injectable({ providedIn: 'root' })
 export class SurveyStore {
@@ -26,7 +40,9 @@ export class SurveyStore {
 
   load(): Promise<void> {
     if (this.pendingLoad) return this.pendingLoad;
-    this.pendingLoad = this.fetchSurveys().finally(() => { this.pendingLoad = undefined; });
+    this.pendingLoad = this.fetchSurveys().finally(() => {
+      this.pendingLoad = undefined;
+    });
     return this.pendingLoad;
   }
 
@@ -34,46 +50,95 @@ export class SurveyStore {
     this.loading.set(true);
     this.error.set('');
     try {
-      const { data, error } = await this.client.from('surveys')
-        .select('id,title,description,category,end_date,questions,survey_responses(choices)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      this.surveys.set((data ?? []).map(row => ({
-        id: row.id, title: row.title, description: row.description,
-        category: row.category, endDate: row.end_date ?? '',
-        questions: row.questions.map((question: Omit<SurveyQuestion, 'votes'>, questionIndex: number) => ({
-          ...question, votes: question.answers.map((_, answerIndex) =>
-            (row.survey_responses ?? []).filter((response: { choices: number[][] }) =>
-              response.choices[questionIndex]?.includes(answerIndex)).length),
-        })),
-      })));
+      const rows = await this.requestSurveys();
+      this.surveys.set(rows.map((row) => this.mapSurvey(row)));
     } catch {
       this.error.set('Surveys could not be loaded. Please try again.');
-    } finally { this.loading.set(false); }
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  private async requestSurveys(): Promise<StoredSurvey[]> {
+    const { data, error } = await this.client
+      .from('surveys')
+      .select('id,title,description,category,end_date,questions,survey_responses(choices)')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  }
+  private mapSurvey(row: StoredSurvey): CreatedSurvey {
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      category: row.category,
+      endDate: row.end_date ?? '',
+      questions: row.questions.map((question, index) =>
+        this.countVotes(question, index, row.survey_responses ?? []),
+      ),
+    };
+  }
+  private countVotes(
+    question: StoredQuestion,
+    index: number,
+    responses: SurveyResponse[],
+  ): SurveyQuestion {
+    return {
+      ...question,
+      votes: question.answers.map(
+        (_, answerIndex) =>
+          responses.filter((response) => response.choices[index]?.includes(answerIndex)).length,
+      ),
+    };
   }
 
   async submit(surveyId: string, choices: number[][]): Promise<void> {
-    const { error } = await this.client.from('survey_responses').insert({ survey_id: surveyId, choices });
+    const { error } = await this.client
+      .from('survey_responses')
+      .insert({ survey_id: surveyId, choices });
     if (error) throw error;
-    this.surveys.update(surveys => surveys.map(survey => survey.id !== surveyId ? survey : {
+    this.recordSubmission(surveyId, choices);
+  }
+  private recordSubmission(surveyId: string, choices: number[][]): void {
+    this.surveys.update((surveys) =>
+      surveys.map((survey) => (survey.id === surveyId ? this.addVotes(survey, choices) : survey)),
+    );
+  }
+  private addVotes(survey: CreatedSurvey, choices: number[][]): CreatedSurvey {
+    return {
       ...survey,
       questions: survey.questions.map((question, index) => ({
         ...question,
-        votes: question.votes.map((count, answer) => count + (choices[index].includes(answer) ? 1 : 0)),
+        votes: question.votes.map(
+          (count, answer) => count + (choices[index].includes(answer) ? 1 : 0),
+        ),
       })),
-    }));
+    };
   }
 
   async publish(survey: Omit<CreatedSurvey, 'id'>): Promise<string> {
     // One insert saves the survey and all its questions together.
-    const { data, error } = await this.client.from('surveys').insert({
-      title: survey.title, description: survey.description, category: survey.category,
-      end_date: survey.endDate || null,
-      questions: survey.questions.map(({ title, multiple, answers }) => ({ title, multiple, answers })),
-    }).select('id').single();
+    const { data, error } = await this.client
+      .from('surveys')
+      .insert(this.insertPayload(survey))
+      .select('id')
+      .single();
     if (error) throw error;
     if (!data) throw new Error('Supabase did not return the published survey.');
-    this.surveys.update(surveys => [{ ...survey, id: data.id }, ...surveys]);
+    this.surveys.update((surveys) => [{ ...survey, id: data.id }, ...surveys]);
     return data.id;
+  }
+  private insertPayload(survey: Omit<CreatedSurvey, 'id'>): SurveyInsert {
+    return {
+      title: survey.title,
+      description: survey.description,
+      category: survey.category,
+      end_date: survey.endDate || null,
+      questions: survey.questions.map(({ title, multiple, answers }) => ({
+        title,
+        multiple,
+        answers,
+      })),
+    };
   }
 }

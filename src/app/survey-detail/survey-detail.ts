@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SurveyStore } from '../services/survey-store';
+import { FIRST_ANSWER_LETTER_CODE, PERCENTAGE_FACTOR } from '../survey.constants';
 
 @Component({
   selector: 'app-survey-detail',
@@ -11,7 +12,9 @@ import { SurveyStore } from '../services/survey-store';
 })
 export class SurveyDetail {
   private readonly store = inject(SurveyStore);
-  protected readonly createdSurvey = computed(() => this.store.surveys().find(s => s.id === this.surveyId()));
+  protected readonly createdSurvey = computed(() =>
+    this.store.surveys().find((s) => s.id === this.surveyId()),
+  );
   private readonly route = inject(ActivatedRoute);
   private readonly params = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
@@ -22,18 +25,19 @@ export class SurveyDetail {
   protected readonly found = computed(() => !!this.createdSurvey());
   protected readonly questions = computed(() => this.createdSurvey()?.questions ?? []);
   protected readonly choices = signal<number[][]>([]);
-  protected readonly counts = computed(() => this.questions().map(question => question.votes));
+  protected readonly counts = computed(() => this.questions().map((question) => question.votes));
   protected readonly saving = signal(false);
   protected readonly submitError = signal('');
   protected readonly submitted = signal(false);
   protected readonly showValidation = signal(false);
+  protected readonly resultsOpen = signal(true);
   protected readonly hasResults = computed(() =>
     this.counts().some((row) => row.some((count) => count > 0)),
   );
   protected readonly results = computed(() =>
     this.counts().map((row) => {
       const total = row.reduce((sum, count) => sum + count, 0);
-      return row.map((count) => (total ? Math.round((count / total) * 100) : 0));
+      return row.map((count) => (total ? Math.round((count / total) * PERCENTAGE_FACTOR) : 0));
     }),
   );
 
@@ -46,35 +50,41 @@ export class SurveyDetail {
       this.choices.set([]);
       this.submitted.set(false);
       this.showValidation.set(false);
+      this.resultsOpen.set(true);
       this.submitError.set('');
     });
   }
 
-  protected reload(): void { void this.store.load(); }
+  protected reload(): void {
+    void this.store.load();
+  }
   private activeSurveyId: string | null | undefined;
 
   protected letter(index: number): string {
-    return String.fromCharCode(65 + index);
+    return String.fromCharCode(FIRST_ANSWER_LETTER_CODE + index);
   }
 
   protected choose(questionIndex: number, answerIndex: number): void {
     if (this.submitted() || this.saving()) return;
     this.choices.update((rows) =>
-      this.questions().map((_, index) => {
-        const row = rows[index] ?? [];
-        if (index !== questionIndex) return row;
-        if (!this.questions()[index].multiple) return [answerIndex];
-        return row.includes(answerIndex)
-          ? row.filter((answer) => answer !== answerIndex)
-          : [...row, answerIndex];
-      }),
+      this.questions().map((_, index) =>
+        index === questionIndex
+          ? this.updatedSelection(index, answerIndex, rows[index] ?? [])
+          : (rows[index] ?? []),
+      ),
     );
+  }
+  private updatedSelection(questionIndex: number, answerIndex: number, row: number[]): number[] {
+    if (!this.questions()[questionIndex].multiple) return [answerIndex];
+    return row.includes(answerIndex)
+      ? row.filter((answer) => answer !== answerIndex)
+      : [...row, answerIndex];
   }
 
   protected async complete(event: Event): Promise<void> {
     event.preventDefault();
     if (this.submitted() || this.saving()) return;
-    if (!this.questions().length || this.questions().some((_, index) => !this.choices()[index]?.length)) {
+    if (!this.hasCompleteAnswers()) {
       this.showValidation.set(true);
       return;
     }
@@ -82,11 +92,23 @@ export class SurveyDetail {
     this.saving.set(true);
     this.submitError.set('');
     this.showValidation.set(false);
+    await this.submitAnswers(surveyId);
+  }
+  private hasCompleteAnswers(): boolean {
+    return (
+      this.questions().length > 0 &&
+      this.questions().every((_, index) => !!this.choices()[index]?.length)
+    );
+  }
+  private async submitAnswers(surveyId: string): Promise<void> {
     try {
       await this.store.submit(surveyId, this.choices());
       if (this.surveyId() === surveyId) this.submitted.set(true);
     } catch {
-      if (this.surveyId() === surveyId) this.submitError.set('Your answers could not be saved. Please try again.');
-    } finally { this.saving.set(false); }
+      if (this.surveyId() === surveyId)
+        this.submitError.set('Your answers could not be saved. Please try again.');
+    } finally {
+      this.saving.set(false);
+    }
   }
 }
