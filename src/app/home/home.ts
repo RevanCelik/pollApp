@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SurveyStore } from '../services/survey-store';
-import { MAX_HIGHLIGHTED_SURVEYS, MILLISECONDS_PER_DAY } from '../survey.constants';
+import { MAX_HIGHLIGHTED_SURVEYS } from '../survey.constants';
+import { surveyDaysLeft } from '../survey-date';
 interface Survey {
   id: number | string;
   created?: boolean;
@@ -25,11 +26,7 @@ export class Home {
       title: survey.title,
       category: survey.category,
       created: true,
-      daysLeft: survey.endDate
-        ? Math.ceil(
-            (new Date(survey.endDate + 'T23:59:59').getTime() - Date.now()) / MILLISECONDS_PER_DAY,
-          )
-        : null,
+      daysLeft: surveyDaysLeft(survey.endDate),
     })),
   );
   protected readonly highlights = computed(() =>
@@ -71,6 +68,8 @@ export class Home {
     return items.filter((s) => !this.selectedCategory() || s.category === this.selectedCategory());
   });
   protected deadline(days: number): string {
+    if (days < 0) return 'Ended';
+    if (days === 0) return 'Ends today';
     return `Ends in ${days} ${days === 1 ? 'Day' : 'Days'}`;
   }
 }

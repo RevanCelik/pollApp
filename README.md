@@ -1,5 +1,22 @@
 # PollApp
 
+## Live results
+
+Survey detail subscribes to INSERT events for its survey in `survey_responses`.
+Saved results are refreshed on new votes and every successful connection, including
+reconnections. Leaving the detail page removes the channel. The LIVE badge reflects
+the actual subscription state and is hidden for expired surveys.
+
+The remote migration `enable_survey_response_realtime` (20261007044622) enables
+the table in `supabase_realtime`; `supabase/realtime.sql` contains an idempotent
+setup statement for other installations. Existing read policies remain in place.
+On 2026-10-07, two independent clients and two browser tabs verified live delivery
+without reloading, and their temporary surveys/responses were removed afterward.
+
+`node scripts/verify-survey-realtime.mjs` repeats the two-client network check.
+It creates a temporary survey and response and prints their survey ID; remove
+that survey afterward through an administrative connection (responses cascade).
+
 ## Supabase setup
 
 The project URL and public publishable key are configured in

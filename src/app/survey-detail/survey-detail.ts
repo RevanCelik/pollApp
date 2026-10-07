@@ -2,7 +2,9 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SurveyStore } from '../services/survey-store';
+import { SurveyRealtime } from '../services/survey-realtime';
 import { FIRST_ANSWER_LETTER_CODE, PERCENTAGE_FACTOR } from '../survey.constants';
+import { isSurveyExpired } from '../survey-date';
 
 @Component({
   selector: 'app-survey-detail',
@@ -12,6 +14,8 @@ import { FIRST_ANSWER_LETTER_CODE, PERCENTAGE_FACTOR } from '../survey.constants
 })
 export class SurveyDetail {
   private readonly store = inject(SurveyStore);
+  private readonly realtime = inject(SurveyRealtime);
+  protected readonly live = this.realtime.connected;
   protected readonly createdSurvey = computed(() =>
     this.store.surveys().find((s) => s.id === this.surveyId()),
   );
@@ -23,6 +27,7 @@ export class SurveyDetail {
   protected readonly loading = this.store.loading;
   protected readonly error = this.store.error;
   protected readonly found = computed(() => !!this.createdSurvey());
+  protected readonly expired = computed(() => isSurveyExpired(this.createdSurvey()?.endDate ?? ''));
   protected readonly questions = computed(() => this.createdSurvey()?.questions ?? []);
   protected readonly choices = signal<number[][]>([]);
   protected readonly counts = computed(() => this.questions().map((question) => question.votes));
@@ -43,16 +48,22 @@ export class SurveyDetail {
 
   constructor() {
     void this.store.load();
-    effect(() => {
+    effect((onCleanup) => {
       const id = this.surveyId();
-      if (id === this.activeSurveyId) return;
-      this.activeSurveyId = id;
-      this.choices.set([]);
-      this.submitted.set(false);
-      this.showValidation.set(false);
-      this.resultsOpen.set(true);
-      this.submitError.set('');
+      if (id) onCleanup(this.realtime.watch(id));
     });
+    effect(() => {
+      this.resetSurvey(this.surveyId());
+    });
+  }
+  private resetSurvey(id: string | null): void {
+    if (id === this.activeSurveyId) return;
+    this.activeSurveyId = id;
+    this.choices.set([]);
+    this.submitted.set(false);
+    this.showValidation.set(false);
+    this.resultsOpen.set(true);
+    this.submitError.set('');
   }
 
   protected reload(): void {
@@ -65,7 +76,7 @@ export class SurveyDetail {
   }
 
   protected choose(questionIndex: number, answerIndex: number): void {
-    if (this.submitted() || this.saving()) return;
+    if (this.submitted() || this.saving() || this.expired()) return;
     this.choices.update((rows) =>
       this.questions().map((_, index) =>
         index === questionIndex
@@ -83,7 +94,7 @@ export class SurveyDetail {
 
   protected async complete(event: Event): Promise<void> {
     event.preventDefault();
-    if (this.submitted() || this.saving()) return;
+    if (this.submitted() || this.saving() || this.expired()) return;
     if (!this.hasCompleteAnswers()) {
       this.showValidation.set(true);
       return;

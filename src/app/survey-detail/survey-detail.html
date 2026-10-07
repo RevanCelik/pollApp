@@ -11,7 +11,7 @@
     <main class="detail-layout">
       <section class="survey-panel" aria-labelledby="survey-title">
         <div class="panel-heading">
-          <span class="status">Published</span>
+          <span class="status">{{ expired() ? 'Ended' : 'Published' }}</span>
           <a class="close-survey" routerLink="/" aria-label="Close survey">×</a>
         </div>
         <div class="metadata">
@@ -27,7 +27,7 @@
         <form (submit)="complete($event)">
           <div class="questions">
             @for (question of questions(); track $index; let questionIndex = $index) {
-              <fieldset [disabled]="submitted() || saving()">
+              <fieldset [disabled]="submitted() || saving() || expired()">
                 <legend>{{ questionIndex + 1 }}. {{ question.title }}</legend>
                 <p class="answer-hint">
                   {{
@@ -60,7 +60,14 @@
             @if (submitError()) {
               <p class="feedback" role="alert">{{ submitError() }}</p>
             }
-            <button class="peach-button" type="submit" [disabled]="submitted() || saving()">
+            @if (expired()) {
+              <p class="feedback" role="status">This survey has ended. Voting is closed.</p>
+            }
+            <button
+              class="peach-button"
+              type="submit"
+              [disabled]="submitted() || saving() || expired()"
+            >
               {{ saving() ? 'Saving answers...' : submitted() ? 'Survey completed' : 'Complete' }}
               <span class="button-icon check-icon" aria-hidden="true"></span>
             </button>
@@ -81,10 +88,15 @@
         <div id="survey-results" [class.mobile-collapsed]="!resultsOpen()">
           <h2 id="results-title">
             Survey results
-            @if (hasResults()) {
+            @if (live() && !expired()) {
               <span>LIVE</span>
             }
           </h2>
+          @if (error()) {
+            <p role="alert">
+              {{ error() }} <button type="button" (click)="reload()">Try again</button>
+            </p>
+          }
           @if (hasResults()) {
             <div class="result-questions" aria-live="polite">
               @for (question of questions(); track $index; let questionIndex = $index) {

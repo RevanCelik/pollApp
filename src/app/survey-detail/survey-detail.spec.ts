@@ -5,13 +5,35 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { SurveyDetail } from './survey-detail';
 import { vi } from 'vitest';
+import { signal } from '@angular/core';
+import { SurveyRealtime } from '../services/survey-realtime';
 
 describe('Survey detail', () => {
+  it('keeps expired surveys readable but blocks choices and submission', async () => {
+    const harness = await RouterTestingHarness.create('/surveys/1');
+    const store = TestBed.inject(SurveyStore);
+    store.surveys.update((surveys) =>
+      surveys.map((survey) => ({ ...survey, endDate: '2000-01-01' })),
+    );
+    harness.detectChanges();
+    const page = harness.routeNativeElement!;
+    const submit = vi.spyOn(store, 'submit');
+    expect([...page.querySelectorAll('fieldset')].every((field) => field.disabled)).toBe(true);
+    expect(page.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(true);
+    expect(page.textContent).toContain('This survey has ended. Voting is closed.');
+    page.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await harness.fixture.whenStable();
+    expect(submit).not.toHaveBeenCalled();
+  });
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: 'surveys/:id', component: SurveyDetail }]),
         { provide: SurveyStore, useFactory: mockSurveyStore },
+        {
+          provide: SurveyRealtime,
+          useValue: { connected: signal(false), watch: vi.fn(() => vi.fn()) },
+        },
       ],
     }).compileComponents();
   });

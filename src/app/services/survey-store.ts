@@ -37,6 +37,8 @@ export class SurveyStore {
   readonly loading = signal(false);
   readonly error = signal('');
   private pendingLoad?: Promise<void>;
+  private pendingRefresh?: Promise<void>;
+  private refreshRequested = false;
 
   load(): Promise<void> {
     if (this.pendingLoad) return this.pendingLoad;
@@ -97,23 +99,31 @@ export class SurveyStore {
       .from('survey_responses')
       .insert({ survey_id: surveyId, choices });
     if (error) throw error;
-    this.recordSubmission(surveyId, choices);
+    await this.refreshResults();
   }
-  private recordSubmission(surveyId: string, choices: number[][]): void {
-    this.surveys.update((surveys) =>
-      surveys.map((survey) => (survey.id === surveyId ? this.addVotes(survey, choices) : survey)),
-    );
+  refreshResults(): Promise<void> {
+    this.refreshRequested = true;
+    if (this.pendingRefresh) return this.pendingRefresh;
+    this.pendingRefresh = this.drainRefreshes().finally(() => {
+      this.pendingRefresh = undefined;
+    });
+    return this.pendingRefresh;
   }
-  private addVotes(survey: CreatedSurvey, choices: number[][]): CreatedSurvey {
-    return {
-      ...survey,
-      questions: survey.questions.map((question, index) => ({
-        ...question,
-        votes: question.votes.map(
-          (count, answer) => count + (choices[index].includes(answer) ? 1 : 0),
-        ),
-      })),
-    };
+  private async drainRefreshes(): Promise<void> {
+    await this.pendingLoad;
+    while (this.refreshRequested) {
+      this.refreshRequested = false;
+      await this.refreshSavedResults();
+    }
+  }
+  private async refreshSavedResults(): Promise<void> {
+    try {
+      const rows = await this.requestSurveys();
+      this.surveys.set(rows.map((row) => this.mapSurvey(row)));
+      this.error.set('');
+    } catch {
+      this.error.set('Results could not be refreshed. Please try again.');
+    }
   }
 
   async publish(survey: Omit<CreatedSurvey, 'id'>): Promise<string> {
