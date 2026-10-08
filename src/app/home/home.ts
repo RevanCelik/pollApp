@@ -1,8 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { SurveyStore } from '../services/survey-store';
-import { MAX_HIGHLIGHTED_SURVEYS } from '../survey.constants';
 import { surveyDaysLeft } from '../survey-date';
+import { MAX_HIGHLIGHTED_SURVEYS } from '../survey.constants';
 interface Survey {
   id: number | string;
   created?: boolean;
@@ -35,9 +36,11 @@ export class Home {
       .sort((a, b) => a.daysLeft! - b.daysLeft!)
       .slice(0, MAX_HIGHLIGHTED_SURVEYS),
   );
+  /** Starts loading the surveys displayed on the home view. */
   constructor() {
     void this.store.load();
   }
+  /** Requests a fresh survey load through the store. */
   protected reload(): void {
     void this.store.load();
   }
@@ -45,8 +48,9 @@ export class Home {
   protected readonly selectedCategory = signal('');
   protected readonly categoryMenuOpen = signal(false);
   protected readonly categories = computed(() =>
-    [...new Set(this.surveys().map((s) => s.category))].sort(),
+    [...new Set(this.surveys().map((survey) => survey.category))].sort(),
   );
+  /** Applies the category filter and closes its dropdown. */
   protected selectCategory(category: string): void {
     this.selectedCategory.set(category);
     this.categoryMenuOpen.set(false);
@@ -60,13 +64,16 @@ export class Home {
     this.categoryMenuOpen.set(false);
   }
   protected readonly visibleSurveys = computed(() => {
-    const items = this.surveys().filter((s) =>
+    const items = this.surveys().filter((survey) =>
       this.selectedStatus() === 'active'
-        ? s.daysLeft === null || s.daysLeft >= 0
-        : s.daysLeft !== null && s.daysLeft < 0,
+        ? survey.daysLeft === null || survey.daysLeft >= 0
+        : survey.daysLeft !== null && survey.daysLeft < 0,
     );
-    return items.filter((s) => !this.selectedCategory() || s.category === this.selectedCategory());
+    return items.filter(
+      (survey) => !this.selectedCategory() || survey.category === this.selectedCategory(),
+    );
   });
+  /** Formats remaining calendar days as an English deadline label. */
   protected deadline(days: number): string {
     if (days < 0) return 'Ended';
     if (days === 0) return 'Ends today';

@@ -1,6 +1,6 @@
 <div class="home">
   <header>
-    <a href="./" aria-label="Poll App home"
+    <a routerLink="/" aria-label="Poll App home"
       ><img class="logo" src="assets/pollapplogo=Orange.svg" alt="Poll App"
     /></a>
   </header>
@@ -59,7 +59,7 @@
         @for (survey of highlights(); track survey.id) {
           <article class="highlight-card">
             <p class="category">{{ survey.category }}</p>
-            <h4>
+            <h4 class="survey-title">
               @if (survey.category === 'Team activities' || survey.created) {
                 <a [routerLink]="['/surveys', survey.id]">{{ survey.title }}</a>
               } @else {
@@ -80,7 +80,7 @@
             [attr.aria-pressed]="selectedStatus() === 'active'"
             (click)="selectedStatus.set('active')"
           >
-            Active survey
+            Active surveys
           </button>
           <button
             type="button"
@@ -88,7 +88,7 @@
             [attr.aria-pressed]="selectedStatus() === 'past'"
             (click)="selectedStatus.set('past')"
           >
-            Past survey
+            Past surveys
           </button>
         </div>
         <div
@@ -104,19 +104,24 @@
             aria-controls="category-options"
             (click)="categoryMenuOpen.set(!categoryMenuOpen())"
           >
-            Sort by categories <span class="arrow" aria-hidden="true"></span>
+            Filter by category <span class="arrow" aria-hidden="true"></span>
           </button>
           @if (selectedCategory()) {
             <p class="selected-category">{{ selectedCategory() }}</p>
           }
           @if (categoryMenuOpen()) {
-            <div class="category-options" id="category-options" aria-label="Survey categories">
+            <div
+              class="category-options"
+              id="category-options"
+              role="group"
+              aria-label="Survey categories"
+            >
               <button
                 type="button"
                 [class.selected]="!selectedCategory()"
                 (click)="selectCategory('')"
               >
-                All Surveys
+                All surveys
               </button>
               @for (category of categories(); track category) {
                 <button
@@ -131,17 +136,23 @@
           }
         </div>
       </div>
-      <div class="survey-list" tabindex="0" aria-label="Surveys" aria-live="polite">
+      <div
+        class="survey-list"
+        role="region"
+        tabindex="0"
+        aria-label="Filtered surveys"
+        aria-live="polite"
+      >
         @for (survey of visibleSurveys(); track survey.id) {
           <article class="survey-card">
             <p class="category">{{ survey.category }}</p>
-            <h4>
+            <h3 class="survey-title">
               @if (survey.category === 'Team activities' || survey.created) {
                 <a [routerLink]="['/surveys', survey.id]">{{ survey.title }}</a>
               } @else {
                 {{ survey.title }}
               }
-            </h4>
+            </h3>
             <span class="deadline">{{
               survey.daysLeft === null ? 'No end date' : deadline(survey.daysLeft)
             }}</span>

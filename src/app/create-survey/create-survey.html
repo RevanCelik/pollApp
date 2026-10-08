@@ -1,9 +1,9 @@
 <main class="create-page">
-  <div class="brand-header">
+  <header class="brand-header">
     <a routerLink="/" aria-label="Poll App home"
       ><img src="assets/pollapplogo=Purple%20dark.svg" alt="Poll App" width="119" height="50"
     /></a>
-  </div>
+  </header>
   <section class="create-panel" aria-labelledby="create-title">
     <div class="draft-heading">
       <span class="draft">Draft</span
@@ -17,7 +17,7 @@
         >Cancel <span aria-hidden="true">×</span></a
       >
     </header>
-    <form (ngSubmit)="publish()">
+    <form (ngSubmit)="publish()" aria-labelledby="create-title">
       <div class="form-panel">
         <p class="required-note">
           <span class="required-mark" aria-hidden="true">*</span> Required fields
@@ -68,39 +68,46 @@
             </div>
           </div>
           <div>
-            <label for="description">Describing text <span>(optional)</span></label>
+            <label for="description">Description <span>(optional)</span></label>
             <div class="input-row">
               <textarea id="description" name="description" [(ngModel)]="description"></textarea
               ><button
                 class="delete"
                 type="button"
-                aria-label="Clear describing text"
+                aria-label="Clear description"
                 (click)="description = ''"
               ></button>
             </div>
           </div>
         </div>
         <div class="questions" [class.single]="questions.length === 1">
-          @for (question of questions; track question; let qi = $index) {
+          @for (question of questions; track question; let questionIndex = $index) {
             <fieldset>
+              <legend class="visually-hidden">
+                Question {{ questionIndex + 1 }} and its answers
+              </legend>
               <div class="question-heading">
-                <label [for]="'question-' + qi"
-                  >{{ qi + 1 }}. Question
+                <label [for]="'question-' + questionIndex"
+                  >{{ questionIndex + 1 }}. Question
                   <span class="required-mark" aria-hidden="true">*</span></label
                 ><button
                   class="delete"
                   type="button"
-                  [attr.aria-label]="qi === 0 ? 'Clear question 1' : 'Delete question ' + (qi + 1)"
-                  (click)="deleteQuestion(qi)"
+                  [attr.aria-label]="
+                    questionIndex === 0
+                      ? 'Clear question 1'
+                      : 'Delete question ' + (questionIndex + 1)
+                  "
+                  (click)="deleteQuestion(questionIndex)"
                 ></button>
               </div>
               <input
-                [id]="'question-' + qi"
-                [name]="'question-' + qi"
+                [id]="'question-' + questionIndex"
+                [name]="'question-' + questionIndex"
                 [(ngModel)]="question.title"
                 required
                 [placeholder]="
-                  qi === 0
+                  questionIndex === 0
                     ? 'Which date would work best for you?'
                     : 'Choose the activities you prefer?'
                 "
@@ -110,28 +117,35 @@
                 ><label class="multiple"
                   ><input
                     type="checkbox"
-                    [name]="'multiple-' + qi"
+                    [name]="'multiple-' + questionIndex"
                     [(ngModel)]="question.multiple"
                   />
                   Allow multiple answers.</label
                 >
               </div>
-              @for (answer of question.answers; track $index; let ai = $index) {
+              @for (answer of question.answers; track $index; let answerIndex = $index) {
                 <div class="answer-row">
-                  <label [for]="'answer-' + qi + '-' + ai"
-                    >{{ letter(ai) }}.
+                  <label [for]="'answer-' + questionIndex + '-' + answerIndex"
+                    >{{ letter(answerIndex) }}.
                     <span class="required-mark" aria-hidden="true">*</span></label
                   ><input
-                    [id]="'answer-' + qi + '-' + ai"
-                    [name]="'answer-' + qi + '-' + ai"
-                    [attr.aria-label]="'Question ' + (qi + 1) + ', answer ' + letter(ai)"
-                    [(ngModel)]="question.answers[ai]"
+                    [id]="'answer-' + questionIndex + '-' + answerIndex"
+                    [name]="'answer-' + questionIndex + '-' + answerIndex"
+                    [attr.aria-label]="
+                      'Question ' + (questionIndex + 1) + ', answer ' + letter(answerIndex)
+                    "
+                    [(ngModel)]="question.answers[answerIndex]"
                     required
                   /><button
                     class="delete"
                     type="button"
-                    [attr.aria-label]="'Delete answer ' + letter(ai) + ' from question ' + (qi + 1)"
-                    (click)="deleteAnswer(question, ai)"
+                    [attr.aria-label]="
+                      'Delete answer ' +
+                      letter(answerIndex) +
+                      ' from question ' +
+                      (questionIndex + 1)
+                    "
+                    (click)="deleteAnswer(question, answerIndex)"
                   ></button>
                 </div>
               }

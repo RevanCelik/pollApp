@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+
 import { SupabaseService } from './supabase.service';
 
 export interface SurveyQuestion {
@@ -38,8 +39,9 @@ export class SurveyStore {
   readonly error = signal('');
   private pendingLoad?: Promise<void>;
   private pendingRefresh?: Promise<void>;
-  private refreshRequested = false;
+  private refreshRequested: boolean = false;
 
+  /** Loads surveys while sharing an existing request between concurrent callers. */
   load(): Promise<void> {
     if (this.pendingLoad) return this.pendingLoad;
     this.pendingLoad = this.fetchSurveys().finally(() => {
@@ -48,6 +50,7 @@ export class SurveyStore {
     return this.pendingLoad;
   }
 
+  /** Loads survey data and exposes loading or failure state to the view. */
   private async fetchSurveys(): Promise<void> {
     this.loading.set(true);
     this.error.set('');
@@ -60,6 +63,11 @@ export class SurveyStore {
       this.loading.set(false);
     }
   }
+  /**
+   * Requests surveys and saved responses, ordered from newest to oldest.
+   * @returns Stored surveys, or an empty array when the database returns no data.
+   * @throws The database error when the request fails.
+   */
   private async requestSurveys(): Promise<StoredSurvey[]> {
     const { data, error } = await this.client
       .from('surveys')
@@ -68,6 +76,7 @@ export class SurveyStore {
     if (error) throw error;
     return data ?? [];
   }
+  /** Converts stored survey data into the view model with derived vote counts. */
   private mapSurvey(row: StoredSurvey): CreatedSurvey {
     return {
       id: row.id,
@@ -80,6 +89,7 @@ export class SurveyStore {
       ),
     };
   }
+  /** Counts saved selections for each answer in the requested question. */
   private countVotes(
     question: StoredQuestion,
     index: number,
@@ -94,6 +104,12 @@ export class SurveyStore {
     };
   }
 
+  /**
+   * Saves a response before refreshing authoritative result counts from the database.
+   * @param surveyId - Identifier of the survey receiving the response.
+   * @param choices - Zero-based answer indices grouped in question order.
+   * @throws The database error when saving the response fails.
+   */
   async submit(surveyId: string, choices: number[][]): Promise<void> {
     const { error } = await this.client
       .from('survey_responses')
@@ -101,6 +117,7 @@ export class SurveyStore {
     if (error) throw error;
     await this.refreshResults();
   }
+  /** Queues a result refresh and shares any refresh already in progress. */
   refreshResults(): Promise<void> {
     this.refreshRequested = true;
     if (this.pendingRefresh) return this.pendingRefresh;
@@ -109,6 +126,7 @@ export class SurveyStore {
     });
     return this.pendingRefresh;
   }
+  /** Waits for initial loading and processes refreshes queued during active requests. */
   private async drainRefreshes(): Promise<void> {
     await this.pendingLoad;
     while (this.refreshRequested) {
@@ -116,6 +134,7 @@ export class SurveyStore {
       await this.refreshSavedResults();
     }
   }
+  /** Reloads saved results and reports failures through the error signal. */
   private async refreshSavedResults(): Promise<void> {
     try {
       const rows = await this.requestSurveys();
@@ -126,6 +145,12 @@ export class SurveyStore {
     }
   }
 
+  /**
+   * Inserts a survey with its questions and updates local state after successful saving.
+   * @param survey - Prepared survey data without its generated identifier.
+   * @returns Identifier of the persisted survey.
+   * @throws The database error, or an error when the insert returns no survey.
+   */
   async publish(survey: Omit<CreatedSurvey, 'id'>): Promise<string> {
     // One insert saves the survey and all its questions together.
     const { data, error } = await this.client
@@ -138,6 +163,7 @@ export class SurveyStore {
     this.surveys.update((surveys) => [{ ...survey, id: data.id }, ...surveys]);
     return data.id;
   }
+  /** Builds a database insert payload without identifiers or derived vote counts. */
   private insertPayload(survey: Omit<CreatedSurvey, 'id'>): SurveyInsert {
     return {
       title: survey.title,

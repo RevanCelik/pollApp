@@ -12,26 +12,28 @@
       <section class="survey-panel" aria-labelledby="survey-title">
         <div class="panel-heading">
           <span class="status">{{ expired() ? 'Ended' : 'Published' }}</span>
-          <a class="close-survey" routerLink="/" aria-label="Close survey">×</a>
+          <a class="close-survey" routerLink="/" aria-label="Close survey"
+            ><span aria-hidden="true">×</span></a
+          >
         </div>
         <div class="metadata">
-          <div>
-            <p>
-              {{ createdSurvey()?.endDate ? 'Ends on ' + createdSurvey()?.endDate : 'No end date' }}
-            </p>
-          </div>
+          <p>
+            {{ createdSurvey()?.endDate ? 'Ends on ' + createdSurvey()?.endDate : 'No end date' }}
+          </p>
           <p>Category: {{ createdSurvey()?.category }}</p>
         </div>
         <h1 id="survey-title">{{ createdSurvey()?.title }}</h1>
         <p class="description">{{ createdSurvey()?.description }}</p>
-        <form (submit)="complete($event)">
+        <form (submit)="complete($event)" aria-labelledby="survey-title">
           <div class="questions">
             @for (question of questions(); track $index; let questionIndex = $index) {
               <fieldset [disabled]="submitted() || saving() || expired()">
                 <legend>{{ questionIndex + 1 }}. {{ question.title }}</legend>
                 <p class="answer-hint">
                   {{
-                    question.multiple ? 'More than one answers are possible.' : 'Choose one answer.'
+                    question.multiple
+                      ? 'You can choose more than one answer.'
+                      : 'Choose one answer.'
                   }}
                 </p>
                 @for (answer of question.answers; track $index; let answerIndex = $index) {
@@ -100,11 +102,17 @@
           @if (hasResults()) {
             <div class="result-questions" aria-live="polite">
               @for (question of questions(); track $index; let questionIndex = $index) {
-                <section class="result-question" [attr.aria-label]="question.title">
-                  <h3>{{ questionIndex + 1 }}. {{ question.title }}</h3>
+                <section
+                  class="result-question"
+                  [attr.aria-labelledby]="'result-question-' + questionIndex"
+                >
+                  <h3 [id]="'result-question-' + questionIndex">
+                    {{ questionIndex + 1 }}. {{ question.title }}
+                  </h3>
                   @for (answer of question.answers; track $index; let answerIndex = $index) {
                     <div
                       class="result-row"
+                      role="img"
                       [attr.aria-label]="
                         answer + ': ' + results()[questionIndex][answerIndex] + '%'
                       "

@@ -1,11 +1,11 @@
 :host {
   display: block;
 }
-h4 a {
+.survey-title a {
   color: inherit;
   text-decoration: none;
 }
-h4 a:hover {
+.survey-title a:hover {
   text-decoration: underline;
 }
 .home {
@@ -195,7 +195,7 @@ h3 {
   font-size: 12px;
   margin: 0 0 8px;
 }
-h4 {
+.survey-title {
   font-size: 20px;
   line-height: 1.25;
   font-weight: 600;
@@ -213,13 +213,13 @@ h4 {
   position: relative;
   transition: background-color 140ms ease;
 }
-h4 a::after {
+.survey-title a::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
 }
-h4 a:hover {
+.survey-title a:hover {
   text-decoration: none;
 }
 .deadline {
@@ -364,7 +364,7 @@ h4 a:hover {
   background: #605367;
   border-radius: 8px;
 }
-.survey-card h4 {
+.survey-card .survey-title {
   font-size: 18px;
 }
 .survey-card .deadline {
@@ -409,14 +409,14 @@ h4 a:hover {
     padding: 28px 22px;
     border-top-right-radius: 54px;
   }
-  h4 {
+  .survey-title {
     font-size: 16px;
   }
   .category,
   .deadline {
     font-size: 10px;
   }
-  .survey-card h4 {
+  .survey-card .survey-title {
     font-size: 14px;
   }
   .survey-card {
@@ -504,7 +504,7 @@ h4 a:hover {
     border-top-right-radius: 80px;
     scroll-snap-align: start;
   }
-  .highlight-card h4 {
+  .highlight-card .survey-title {
     font-size: 24px;
   }
   .category,
@@ -543,7 +543,7 @@ h4 a:hover {
     padding: 16px 20px 12px;
     border-top-right-radius: 52px;
   }
-  .survey-card h4 {
+  .survey-card .survey-title {
     font-size: 20px;
   }
 }
