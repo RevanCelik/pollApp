@@ -140,11 +140,11 @@ textarea {
   flex: 0 0 24px;
   width: 24px;
   height: 30px;
-  background: url('/assets/delete=default.svg') center / 18px no-repeat;
+  background: url('../../../public/assets/delete=default.svg') center / 18px no-repeat;
   border: 0;
 }
 .delete:hover {
-  background-image: url('/assets/delete=hover.svg');
+  background-image: url('../../../public/assets/delete=hover.svg');
 }
 .date-category {
   display: grid;
@@ -209,7 +209,7 @@ fieldset {
 }
 .multiple input:checked {
   border-color: var(--accent);
-  background: url('/assets/checkbox=checked.svg') center / 19px no-repeat;
+  background: url('../../../public/assets/checkbox=checked.svg') center / 19px no-repeat;
 }
 .answer-row {
   display: flex;

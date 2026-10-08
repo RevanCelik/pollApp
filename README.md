@@ -1,106 +1,121 @@
 # PollApp
 
-## Live results
+PollApp is a responsive web app for creating and answering surveys. Users can plan a team event, collect opinions about gaming, or ask questions about a healthy lifestyle. Results appear directly on the survey detail page.
 
-Survey detail subscribes to INSERT events for its survey in `survey_responses`.
-Saved results are refreshed on new votes and every successful connection, including
-reconnections. Leaving the detail page removes the channel. The LIVE badge reflects
-the actual subscription state and is hidden for expired surveys.
+The project was developed as part of the Developer Akademie training program. The interface is in English and supports desktop, tablet, and smartphone screens.
 
-The remote migration `enable_survey_response_realtime` (20261007044622) enables
-the table in `supabase_realtime`; `supabase/realtime.sql` contains an idempotent
-setup statement for other installations. Existing read policies remain in place.
-On 2026-10-07, two independent clients and two browser tabs verified live delivery
-without reloading, and their temporary surveys/responses were removed afterward.
+## Features
 
-`node scripts/verify-survey-realtime.mjs` repeats the two-client network check.
-It creates a temporary survey and response and prints their survey ID; remove
-that survey afterward through an administrative connection (responses cascade).
+- **Create surveys:** Add a title, category, questions, an optional description, and an optional end date.
+- **Manage answer options:** Each question supports two to six answers. Depending on the question settings, participants can select one or multiple options.
+- **Browse surveys:** View surveys ending soon and filter surveys by active or past status and category.
+- **Answer surveys:** Required answers are validated. After a successful submission, the current form is locked.
+- **View results:** Answer percentages are calculated from saved responses.
+- **Live results:** New votes from other participants automatically update the open detail page through Supabase Realtime. The LIVE indicator appears for an active survey with a connected subscription.
+- **Open past surveys:** Expired surveys and their results remain readable. New responses are blocked.
+- **Persist data:** Surveys and responses are stored in Supabase and loaded again on subsequent visits.
 
-## Supabase setup
+## Languages and Technologies
 
-The project URL and public publishable key are configured in
-`src/environments/environment.ts`. No secret/service-role key belongs in the frontend.
+| Language / Technology | Purpose                                                          |
+| --------------------- | ---------------------------------------------------------------- |
+| TypeScript            | Application logic, data models, and tests                        |
+| HTML                  | Component templates and semantic page structure                  |
+| SCSS / CSS            | Styling, responsive layouts, and control states                  |
+| SQL / PL/pgSQL        | Database tables, validation, and access policies                 |
+| Angular 22            | Frontend with standalone components, signals, forms, and routing |
+| Supabase              | PostgreSQL database, data access, and realtime events            |
+| RxJS                  | Reactive integration of route data                               |
+| Vitest and jsdom      | Automated component and service tests                            |
+| Prettier              | Consistent source code formatting                                |
+| Node.js and npm       | Development tools, dependencies, and builds                      |
 
-Before using the app, apply `supabase/migrations/202610030001_create_surveys.sql`
-to that Supabase project through its SQL Editor, or through a connected Supabase
-integration. This creates the `surveys` table, nested question validation and
-row-level security policies. The migration was applied to the Poll App project (`mwccjmhrfkgxitdjglie`) on 2026-10-03. Anonymous-role insert/read and validation checks passed in a rolled-back transaction; the public REST API returns HTTP 200.
+## Getting Started
 
-Each survey stores its question texts, multiple-choice setting and answer options
-in the `questions` JSONB column. A single insert saves the complete survey
-atomically. Home and detail screens read from Supabase, including on a fresh visit.
-The confirmation dialog appears only after a successful insert; failed requests
-keep the form available for retry.
+You need Node.js, npm, and a configured Supabase project. The installed Angular CLI version supports Node.js `^22.22.3`, `^24.15.0`, or `>=26.0.0`.
 
-The current app has no login. Published surveys are publicly readable and anyone
-can create a survey. The public API cannot update or delete surveys. There is no
-owner-specific filtering yet. Participant submissions are saved in Supabase by
-`supabase/migrations/20261005042218_persist_survey_responses.sql` (applied to the
-Poll App project on 2026-10-05). Results are counted from saved submissions on
-every visit. Each submission is inserted atomically, validated against the survey,
-and cannot be changed or deleted through the public API. Previous
-localStorage surveys are not automatically imported.
-
-After applying the migration, verify the live integration by publishing a survey
-with two questions, opening its detail URL in a fresh browser session and checking
-that its title, questions and answer options load. Automated tests mock Supabase
-and cover insert payloads, read mapping, rejected requests and retry behavior.
-
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.7.
-
-## Development server
-
-To start a local development server, run:
+Install the dependencies from the project directory:
 
 ```bash
-ng serve
+npm ci
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Then start the development server:
 
 ```bash
-ng generate component component-name
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The app is available at `http://localhost:4200/`. The browser opens automatically. Source code changes are reflected while the development server is running.
+
+## Supabase Setup
+
+The project URL and public publishable key are configured in `src/environments/environment.ts`. To use your own Supabase project, replace these values with your project's URL and key. Secret keys and service-role keys must not be included in the frontend.
+
+For a new database, run the following SQL files in this order using the Supabase SQL Editor:
+
+1. `supabase/migrations/202610030001_create_surveys.sql`
+2. `supabase/migrations/20261005042218_persist_survey_responses.sql`
+3. `supabase/realtime.sql`
+
+The first migration creates the `surveys` table with validation and Row Level Security. Questions and answer options are stored with the survey in a JSONB column. The second migration creates `survey_responses` and validates responses, including the survey deadline. The realtime setup enables INSERT notifications for new responses. This setup has already been applied to the existing project.
+
+The app does not require a login. Surveys are publicly readable and can be created and answered without an account. Public database access allows reading and inserting data; published surveys and responses cannot be updated or deleted through that access. User-specific management is not implemented.
+
+The lock after voting applies to the current form. A limit of one vote per person across sessions is not implemented without user identification. Surveys previously stored in localStorage are not imported automatically.
+
+## Production Build
 
 ```bash
-ng generate --help
+npm run build
 ```
 
-## Building
+The optimized build is generated in `dist/pollApp/`. The deployable website files are located in **`dist/pollApp/browser/`**.
 
-To build the project run:
+To deploy the app, upload the contents of the `browser` directory to a web server. For direct access to Angular routes such as `/surveys/<id>`, configure the server to fall back to `index.html` for paths that do not match a static file.
+
+The build currently reports size warnings for the initial bundle and three component stylesheets. The build succeeds; the warning thresholds in `angular.json` indicate opportunities for optimization.
+
+## Tests and Formatting
+
+Run all automated tests once:
 
 ```bash
-ng build
+npm test -- --watch=false
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+The tests use isolated Supabase mocks. They cover form validation, publication, saved results, expired surveys, error handling, and realtime connections. The last test run passed 26 tests across six test files.
 
-## Running unit tests
+The additional integration check, `node scripts/verify-survey-realtime.mjs`, verifies realtime delivery using two independent clients against the configured Supabase project. It creates a temporary survey and response. Afterward, delete the printed survey ID through an administrative database connection; associated responses are deleted automatically.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Check TypeScript and HTML formatting:
 
 ```bash
-ng test
+npx prettier --check "src/**/*.ts" "src/**/*.html"
 ```
 
-## Running end-to-end tests
+Formatting settings are defined in `.prettierrc.json`. An end-to-end testing framework is not currently configured.
 
-For end-to-end (e2e) testing, run:
+## Project Structure
 
-```bash
-ng e2e
+```text
+src/
+  app/
+    home/                 Home page and survey overview
+    create-survey/        Survey creation form
+    survey-detail/        Participation and results view
+    services/             Data access, realtime, and test fixtures
+    survey-date.ts        Survey deadline calculations
+    survey.constants.ts   Shared domain constants
+  environments/           Supabase configuration
+  styles.scss             Global styles
+public/assets/            Logos, illustrations, and icons
+supabase/                 Database migrations and realtime setup
+scripts/                  Additional realtime integration check
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Code Conventions
 
-## Additional Resources
+The source code uses separate HTML templates, typed functions, TSDoc comments, and named domain constants. Functions are limited to a maximum of 14 lines. HTML semantics, heading hierarchy, form labels, and alternative text have been reviewed.
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The documented project status is available in [PROJECT_CHECKLIST.md](PROJECT_CHECKLIST.md).

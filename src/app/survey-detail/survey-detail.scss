@@ -160,7 +160,7 @@ legend {
 }
 .answer input:checked {
   border-color: var(--accent);
-  background: var(--accent) url('/assets/checkbox=checked.svg') center / 17px no-repeat;
+  background: var(--accent) url('../../../public/assets/checkbox=checked.svg') center / 17px no-repeat;
 }
 .answer input:focus-visible {
   outline: 2px solid #f59128;

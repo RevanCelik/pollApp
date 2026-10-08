@@ -77,7 +77,7 @@ button:disabled {
   transform: rotate(90deg);
 }
 .check-icon {
-  background: url('/assets/checkbox=checked.svg') center / 21px no-repeat;
+  background: url('../public/assets/checkbox=checked.svg') center / 21px no-repeat;
 }
 .new-survey .button-icon,
 .peach-button:not(:disabled) .button-icon {
