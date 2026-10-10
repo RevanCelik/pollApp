@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, ElementRef, inject, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,9 +13,13 @@ import {
 
 @Component({
   selector: 'app-create-survey',
-  imports: [FormsModule, RouterLink],
+  imports: [DatePipe, FormsModule, RouterLink],
   templateUrl: './create-survey.html',
   styleUrl: './create-survey.scss',
+  host: {
+    '(document:click)': 'closeCategoryOutside($event)',
+    '(document:keydown.escape)': 'closeCategory()',
+  },
 })
 export class CreateSurvey {
   private readonly store = inject(SurveyStore);
@@ -24,8 +29,43 @@ export class CreateSurvey {
   protected description: string = '';
   protected endDate: string = '';
   protected category: string = '';
+  protected readonly categories = ['Team activities', 'Gaming', 'Healthy Lifestyle', 'Other'];
+  private readonly categoryDropdown = viewChild<ElementRef<HTMLDetailsElement>>('categoryDropdown');
+
+  /** Selects the draft category and returns focus to the dropdown trigger. */
+  protected selectCategory(category: string): void {
+    this.category = category;
+    this.closeCategory();
+  }
+
+  protected closeCategory(): void {
+    const dropdown = this.categoryDropdown()?.nativeElement;
+    if (!dropdown?.open) return;
+    dropdown.open = false;
+    dropdown.querySelector('summary')?.focus();
+  }
+
+  protected closeCategoryOutside(event: Event): void {
+    const dropdown = this.categoryDropdown()?.nativeElement;
+    if (dropdown && event.target instanceof Node && !dropdown.contains(event.target)) {
+      dropdown.open = false;
+    }
+  }
   protected questions: SurveyQuestion[] = [this.emptyQuestion()];
   protected error: string = '';
+  protected validationAttempted = false;
+
+  protected isRequiredMissing(value: string): boolean {
+    return this.validationAttempted && !value.trim();
+  }
+
+  protected get invalidEndDate(): boolean {
+    return this.validationAttempted && !!this.endDate && this.endDate < this.today;
+  }
+
+  protected get formMessage(): string {
+    return (this.validationAttempted ? this.validationError() : '') || this.error;
+  }
   protected publishedId: string = '';
   protected saving: boolean = false;
   protected readonly today = new Date().toLocaleDateString('en-CA');
@@ -48,9 +88,9 @@ export class CreateSurvey {
   protected addQuestion(): void {
     this.questions.push(this.emptyQuestion());
   }
-  /** Clears the first question or removes an additional question. */
+  /** Removes a question, or clears it when only one question remains. */
   protected deleteQuestion(index: number): void {
-    if (index === 0) this.questions[0] = this.emptyQuestion();
+    if (this.questions.length === 1) Object.assign(this.questions[0], this.emptyQuestion());
     else this.questions.splice(index, 1);
   }
   /** Removes an answer or clears it to preserve the minimum answer count. */
@@ -70,8 +110,9 @@ export class CreateSurvey {
   /** Validates and publishes the draft, exposing saving and failure state to the form. */
   protected async publish(): Promise<void> {
     if (this.publishedId || this.saving) return;
-    this.error = this.validationError();
-    if (this.error) return;
+    this.validationAttempted = true;
+    this.error = '';
+    if (this.validationError()) return;
     this.saving = true;
     try {
       await this.saveSurvey();
@@ -84,7 +125,7 @@ export class CreateSurvey {
   /** Returns the first draft validation message, or an empty string when valid. */
   private validationError(): string {
     if (this.hasMissingFields()) {
-      return 'Please enter a survey name, choose a category and fill in every question and answer.';
+      return 'Please complete the highlighted required fields.';
     }
     if (this.endDate && this.endDate < this.today) {
       return 'Please choose an end date today or later.';

@@ -3,9 +3,11 @@
     <a routerLink="/" aria-label="Poll App home"
       ><img src="assets/pollapplogo=Purple%20dark.svg" alt="Poll App"
     /></a>
-    <button class="peach-button" type="button" routerLink="/surveys/new">
-      Create survey <span class="button-icon add-icon" aria-hidden="true"></span>
-    </button>
+    <span class="create-survey-slot">
+      <button class="peach-button create-survey" type="button" routerLink="/surveys/new">
+        Create survey <span class="button-icon add-icon" aria-hidden="true"></span>
+      </button>
+    </span>
   </header>
   @if (found()) {
     <main class="detail-layout">
@@ -18,7 +20,7 @@
         </div>
         <div class="metadata">
           <p>
-            {{ createdSurvey()?.endDate ? 'Ends on ' + createdSurvey()?.endDate : 'No end date' }}
+            {{ createdSurvey()?.endDate ? 'Ends on ' + (createdSurvey()?.endDate | date: 'dd.MM.yy') : 'No end date' }}
           </p>
           <p>Category: {{ createdSurvey()?.category }}</p>
         </div>
@@ -70,7 +72,13 @@
               type="submit"
               [disabled]="submitted() || saving() || expired()"
             >
-              {{ saving() ? 'Saving answers...' : submitted() ? 'Survey completed' : 'Complete' }}
+              {{
+                saving()
+                  ? 'Saving answers...'
+                  : submitted()
+                    ? 'Survey completed'
+                    : 'Complete Survey'
+              }}
               <span class="button-icon check-icon" aria-hidden="true"></span>
             </button>
           </div>
@@ -132,7 +140,8 @@
             </div>
           } @else {
             <p class="results-description">
-              Results will be shown here after participants complete the survey.
+              Select an answer to preview the results. Your answers are saved when you complete the
+              survey.
             </p>
             <p class="empty-results" role="status">There are no answers yet.</p>
           }

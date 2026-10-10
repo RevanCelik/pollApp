@@ -1,3 +1,35 @@
+@font-face {
+  font-family: 'Nerko One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../public/assets/fonts/nerko-one-400.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Nokora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../public/assets/fonts/nokora-400.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Nokora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../public/assets/fonts/nokora-700.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Nokora';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('../public/assets/fonts/nokora-900.ttf') format('truetype');
+}
+
 :root {
   --background: #35273a;
   --accent: #ffb568;
@@ -12,7 +44,13 @@ body {
   margin: 0;
   background: var(--background);
   color: #fff;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Nokora', Arial, sans-serif;
+  font-size: 19px;
+}
+h1,
+h2 {
+  font-family: 'Nerko One', cursive;
+  font-weight: 400;
 }
 img {
   max-width: 100%;
@@ -102,4 +140,55 @@ a:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 5px;
+}
+
+.new-survey .button-icon {
+  position: absolute;
+  right: 16px;
+  top: calc(50% - 8px);
+  margin: 0;
+  visibility: visible;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition:
+    opacity 320ms ease,
+    transform 320ms ease;
+}
+.new-survey:hover .button-icon,
+.new-survey:focus-visible .button-icon {
+  opacity: 1;
+  transform: translateX(0);
+}
+.new-survey:active .button-icon {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-survey .button-icon {
+    transition: none;
+  }
+}
+
+.date-input-row {
+  position: relative;
+}
+.date-input-row input[type='date'] {
+  color: transparent;
+  position: relative;
+  min-height: 40px;
+}
+.date-input-row input[type='date']::-webkit-datetime-edit {
+  opacity: 0;
+}
+.date-display {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  color: #35273a;
+  font-size: 17px;
+  pointer-events: none;
+}
+@media (max-width: 480px) {
+  .date-display {
+    font-size: 19px;
+  }
 }

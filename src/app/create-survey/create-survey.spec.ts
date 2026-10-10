@@ -44,9 +44,7 @@ function fillValidSurvey(page: HTMLElement): void {
   setInput(page, '#question-0', 'Choose one');
   setInput(page, '#answer-0-0', 'Yes');
   setInput(page, '#answer-0-1', 'No');
-  const category = page.querySelector('select')!;
-  category.value = 'Team activities';
-  category.dispatchEvent(new Event('change'));
+  page.querySelector<HTMLButtonElement>('.category-options button')!.click();
 }
 
 /** Submits the creation form and waits for publication to settle. */
@@ -65,18 +63,44 @@ async function configureCreateSurvey(): Promise<void> {
   }).compileComponents();
 }
 
-/** Verifies that the first question is cleared while extra questions can be removed. */
+/** Verifies renumbering and preservation of the remaining questions and answers. */
 async function testClearsAndDeletesQuestions(): Promise<void> {
   const fixture = await createForm();
   const page = fixture.nativeElement as HTMLElement;
-  setInput(page, '#question-0', 'A question');
+  setInput(page, '#question-0', 'First question');
   await clickButton(fixture, '.add-question button');
+  setInput(page, '#question-1', 'Second question');
+  setInput(page, '#answer-1-0', 'Second answer A');
+  setInput(page, '#answer-1-1', 'Second answer B');
+  const multiple = page.querySelector<HTMLInputElement>('fieldset:nth-of-type(2) .multiple input')!;
+  multiple.click();
+  await clickButton(fixture, '.add-question button');
+  setInput(page, '#question-2', 'Third question');
+  setInput(page, '#answer-2-0', 'Third answer A');
+  setInput(page, '#answer-2-1', 'Third answer B');
+  await clickButton(fixture, '[aria-label="Delete question 1"]');
   expect(page.querySelectorAll('fieldset').length).toBe(2);
-  await clickButton(fixture, '[aria-label="Clear question 1"]');
-  expect(page.querySelector<HTMLInputElement>('#question-0')!.value).toBe('');
-  expect(page.querySelectorAll('fieldset').length).toBe(2);
+  expect(page.querySelector<HTMLInputElement>('#question-0')!.value).toBe('Second question');
+  expect(page.querySelector<HTMLInputElement>('#question-1')!.value).toBe('Third question');
+  expect(page.querySelector<HTMLInputElement>('#answer-0-0')!.value).toBe('Second answer A');
+  expect(page.querySelector<HTMLInputElement>('#answer-0-1')!.value).toBe('Second answer B');
+  expect(page.querySelector<HTMLInputElement>('fieldset:first-of-type .multiple input')!.checked).toBe(true);
+  expect(page.querySelector<HTMLInputElement>('#answer-1-0')!.value).toBe('Third answer A');
+  expect(page.querySelector<HTMLInputElement>('#answer-1-1')!.value).toBe('Third answer B');
+  expect(page.querySelector('#question-2')).toBeNull();
   await clickButton(fixture, '[aria-label="Delete question 2"]');
   expect(page.querySelectorAll('fieldset').length).toBe(1);
+  expect(page.querySelector<HTMLInputElement>('#question-0')!.value).toBe('Second question');
+  const remainingFieldset = page.querySelector('fieldset');
+  const remainingQuestionInput = page.querySelector('#question-0');
+  await clickButton(fixture, '[aria-label="Clear question 1"]');
+  expect(page.querySelector('fieldset')).toBe(remainingFieldset);
+  expect(page.querySelector('#question-0')).toBe(remainingQuestionInput);
+  expect(page.querySelectorAll('fieldset').length).toBe(1);
+  expect(page.querySelector<HTMLInputElement>('#question-0')!.value).toBe('');
+  expect(page.querySelector<HTMLInputElement>('#answer-0-0')!.value).toBe('');
+  expect(page.querySelector<HTMLInputElement>('#answer-0-1')!.value).toBe('');
+  expect(page.querySelector<HTMLInputElement>('fieldset:first-of-type .multiple input')!.checked).toBe(false);
 }
 
 /** Verifies the answer limit and that deleting an answer permits adding another. */
@@ -95,9 +119,24 @@ async function testLimitsEachQuestionToSixAnswers(): Promise<void> {
 async function testValidatesAndPublishesSurvey(): Promise<void> {
   const fixture = await createForm();
   const page = fixture.nativeElement as HTMLElement;
+  expect(page.querySelector('.field-invalid')).toBeNull();
   await submitForm(fixture);
-  expect(page.querySelector('[role="alert"]')).not.toBeNull();
+  expect(page.querySelector('[role="alert"]')?.textContent).toContain(
+    'Please complete the highlighted required fields.',
+  );
+  expect(page.querySelectorAll('[aria-invalid="true"]').length).toBe(5);
+  expect(page.querySelector('#description')?.getAttribute('aria-invalid')).toBeNull();
+  setInput(page, '#survey-name', '   ');
+  await fixture.whenStable();
+  expect(page.querySelector('#survey-name')?.getAttribute('aria-invalid')).toBe('true');
+  setInput(page, '#survey-name', 'New survey');
+  await fixture.whenStable();
+  expect(page.querySelector('#survey-name')?.getAttribute('aria-invalid')).toBe('false');
+  expect(page.querySelectorAll('[aria-invalid="true"]').length).toBe(4);
   fillValidSurvey(page);
+  await fixture.whenStable();
+  expect(page.querySelector('.field-invalid')).toBeNull();
+  expect(page.querySelector('[role="alert"]')).toBeNull();
   const dialog = page.querySelector('dialog')!;
   dialog.showModal = vi.fn();
   await submitForm(fixture);
@@ -107,7 +146,7 @@ async function testValidatesAndPublishesSurvey(): Promise<void> {
 }
 
 const CREATE_SURVEY_TESTS: Array<[string, () => void | Promise<void>]> = [
-  ['clears the first question and removes additional questions', testClearsAndDeletesQuestions],
+  ['removes and renumbers questions while clearing the last remaining question', testClearsAndDeletesQuestions],
   [
     'limits each question to six answers and allows adding again after deletion',
     testLimitsEachQuestionToSixAnswers,

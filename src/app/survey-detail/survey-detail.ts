@@ -1,20 +1,23 @@
+import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { SurveyRealtime } from '../services/survey-realtime';
+import { SurveyParticipation } from '../services/survey-participation';
 import { SurveyStore } from '../services/survey-store';
 import { isSurveyExpired } from '../survey-date';
 import { FIRST_ANSWER_LETTER_CODE, PERCENTAGE_FACTOR } from '../survey.constants';
 
 @Component({
   selector: 'app-survey-detail',
-  imports: [RouterLink],
+  imports: [DatePipe, RouterLink],
   templateUrl: './survey-detail.html',
   styleUrl: './survey-detail.scss',
 })
 export class SurveyDetail {
   private readonly store = inject(SurveyStore);
+  private readonly participation = inject(SurveyParticipation);
   private readonly realtime = inject(SurveyRealtime);
   protected readonly live = this.realtime.connected;
   protected readonly createdSurvey = computed(() =>
@@ -31,7 +34,18 @@ export class SurveyDetail {
   protected readonly expired = computed(() => isSurveyExpired(this.createdSurvey()?.endDate ?? ''));
   protected readonly questions = computed(() => this.createdSurvey()?.questions ?? []);
   protected readonly choices = signal<number[][]>([]);
-  protected readonly counts = computed(() => this.questions().map((question) => question.votes));
+  private readonly savingCounts = signal<number[][] | null>(null);
+  /** Adds unsaved selections locally; keeps the preview stable during the database refresh. */
+  protected readonly counts = computed(() => {
+    if (this.saving() && this.savingCounts()) return this.savingCounts()!;
+    const preview = !this.submitted() && !this.expired();
+    return this.questions().map((question, questionIndex) =>
+      question.votes.map(
+        (count, answerIndex) =>
+          count + (preview && this.choices()[questionIndex]?.includes(answerIndex) ? 1 : 0),
+      ),
+    );
+  });
   protected readonly saving = signal(false);
   protected readonly submitError = signal('');
   protected readonly submitted = signal(false);
@@ -63,7 +77,8 @@ export class SurveyDetail {
     if (id === this.activeSurveyId) return;
     this.activeSurveyId = id;
     this.choices.set([]);
-    this.submitted.set(false);
+    this.savingCounts.set(null);
+    this.submitted.set(!!id && this.participation.hasSubmitted(id));
     this.showValidation.set(false);
     this.resultsOpen.set(true);
     this.submitError.set('');
@@ -107,11 +122,17 @@ export class SurveyDetail {
   protected async complete(event: Event): Promise<void> {
     event.preventDefault();
     if (this.submitted() || this.saving() || this.expired()) return;
+    const id = this.surveyId();
+    if (id && this.participation.hasSubmitted(id)) {
+      this.submitted.set(true);
+      return;
+    }
     if (!this.hasCompleteAnswers()) {
       this.showValidation.set(true);
       return;
     }
     const surveyId = this.surveyId()!;
+    this.savingCounts.set(this.counts());
     this.saving.set(true);
     this.submitError.set('');
     this.showValidation.set(false);
@@ -128,12 +149,14 @@ export class SurveyDetail {
   private async submitAnswers(surveyId: string): Promise<void> {
     try {
       await this.store.submit(surveyId, this.choices());
+      this.participation.markSubmitted(surveyId);
       if (this.surveyId() === surveyId) this.submitted.set(true);
     } catch {
       if (this.surveyId() === surveyId)
         this.submitError.set('Your answers could not be saved. Please try again.');
     } finally {
       this.saving.set(false);
+      this.savingCounts.set(null);
     }
   }
 }
